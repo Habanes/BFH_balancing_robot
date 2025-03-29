@@ -5,6 +5,8 @@ import logging
 class ConfigManager:
     def __init__(self):
         print("LOADING CONFIG")
+        
+        self.test_mode = True
 
         # Logging
         self.debug_mode = True
@@ -13,5 +15,3 @@ class ConfigManager:
         self.valid = True
         logging.info("CONFIG LOAD SUCCESS")
         
-# Create a single ConfigManager instance
-global_config = ConfigManager()
