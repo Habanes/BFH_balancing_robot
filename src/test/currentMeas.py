@@ -3,32 +3,51 @@ import matplotlib.pyplot as plt
 import time
 import numpy as np
 
-SAMPLE_COUNT = 1000
-I2C_BUS_ID = 1
-ADC_ADDR_LEFT = 0x4B
-ADC_ADDR_RIGHT = 0x4D
 
-class CurrentSensor:
-    def __init__(self, is_left: bool, bus=smbus.SMBus(I2C_BUS_ID)) -> None:
-        self.bus = bus
-        self.address = ADC_ADDR_LEFT if is_left else ADC_ADDR_RIGHT
+DEBBUG_LENGTH = 1000
 
-    def read_current(self) -> int:
-        raw = self.bus.read_i2c_block_data(self.address, 0x00, 2)
-        value = ((raw[1] >> 2) | (raw[0] << 6)) & 0x3FF
-        return value - 1024 if value & 0x200 else value
+DEV_BUS = 1
+DEV_ADDR = 0x4B 
+DEV_ADDR_2 = 0x4D
 
-if __name__ == "__main__":
-    sensor_left = CurrentSensor(is_left=True)
-    sensor_right = CurrentSensor(is_left=False)
-    
-    samples = np.zeros((SAMPLE_COUNT, 2))
 
-    for i in range(SAMPLE_COUNT):
-        samples[i, 0] = sensor_left.read_current()
-        samples[i, 1] = sensor_right.read_current()
-        print(f"Left: {samples[i,0]:.2f}  Right: {samples[i,1]:.2f}")
+
+class CurrentMeas:
+    def __init__(self,left_right = False,bus=smbus.SMBus(DEV_BUS)) -> None:
+        self.init(left_right,bus)
+
+    def init(self,left_right,bus):
+       self.left_right = left_right
+       self.bus = bus
+
+
+    def getCurrent(self):
+        data = self.bus.read_i2c_block_data(DEV_ADDR if self.left_right else DEV_ADDR_2,0x00,2)
+
+        meas = ((data[1]>>2) | (data[0]<<6))&0x3FF
+        meas += -2*(meas & 0x200) #get negative values from twos complement   
+        return meas
+
+
+
+
+if __name__=="__main__":
+    current_1 = CurrentMeas(left_right=True)
+    current_2 = CurrentMeas(left_right=False)
+     
+    plotData = np.zeros((DEBBUG_LENGTH,2))
+
+    for i in range(DEBBUG_LENGTH):
+        
+        plotData[i,0] = current_1.getCurrent()
+        plotData[i,1] = current_2.getCurrent()
+        print("Current 1: %f  Curent 2: %f"%(plotData[i,0],plotData[i,1]))
+        
         time.sleep(0.01)
+        
 
-    plt.plot(samples)
+    plt.plot(plotData)
     plt.savefig("plot_encoder.png")
+    # plt.show()
+    # while True:
+    #     time.sleep(1)

@@ -4,59 +4,89 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 
-SAMPLE_COUNT = 1000
-I2C_BUS_ID = 1
-IMU_ADDR = 0x28
 
-REG_MODE = 0x3D
-REG_PITCH_LSB = 0x1E
-REG_GYRO_Y_LSB = 0x16
+DEBBUG_LENGTH = 1000
 
-MODE_CONFIG = 0b0000
-MODE_NDOF = 0b1100
+DEV_BUS = 1
+DEV_ADDR = 0x28
+OPR_MODE_ADDR = 0x3d
+NDOF_MODE = 0b1100
+CONFIG_MODE = 0b0000
+PITCH_MSB = 0x1f
+PITCH_LSB = 0x1e
+PAGE_ID = 0x07
+GYRO_Y_MSB = 0x17
+GYRO_Y_LSB = 0x16
 
 class IMU:
-    def __init__(self, bus=smbus.SMBus(I2C_BUS_ID)) -> None:
-        self.bus = bus
-        self._initialize()
+    def __init__(self,bus=smbus.SMBus(DEV_BUS)) -> None:
+        self.init_imu(bus)
+       
+                
+    def init_imu(self,bus):
+        self.bus=bus
 
-    def _initialize(self):
-        self.bus.write_byte_data(IMU_ADDR, REG_MODE, MODE_CONFIG)
-        if self.bus.read_byte_data(IMU_ADDR, REG_MODE) == MODE_CONFIG:
-            self.bus.write_byte_data(IMU_ADDR, REG_MODE, MODE_NDOF)
-            if self.bus.read_byte_data(IMU_ADDR, REG_MODE) != MODE_NDOF:
-                raise RuntimeError("IMU failed to initialize NDOF mode")
-            print("IMU initialized")
+        self.bus.write_byte_data(DEV_ADDR,OPR_MODE_ADDR,CONFIG_MODE) # Set into config mode
+        opr_mode = self.bus.read_byte_data(DEV_ADDR,OPR_MODE_ADDR)
+        if opr_mode == 0:
+            self.bus.write_byte_data(DEV_ADDR,OPR_MODE_ADDR,NDOF_MODE) # Set into 9DOF mode
+            opr_mode = self.bus.read_byte_data(DEV_ADDR,OPR_MODE_ADDR)
+            if opr_mode != 12:
+                print(opr_mode)
+                raise RuntimeError("IMU Error")
+            else:
+                print("IMU INIT DONE")
+        
 
-    def read_pitch(self) -> float:
-        raw = self.bus.read_i2c_block_data(IMU_ADDR, REG_PITCH_LSB, 2)
-        value = (raw[1] << 8) | raw[0]
-        if value > 32767:
-            value -= 65536
-        return value / 16 + 90
+        
+    def read_pitch(self):
 
-    def read_gyro_y(self) -> float:
-        raw = self.bus.read_i2c_block_data(IMU_ADDR, REG_GYRO_Y_LSB, 2)
-        value = (raw[1] << 8) | raw[0]
-        if value > 32767:
-            value -= 65536
-        return value / 16
+            data = self.bus.read_i2c_block_data(DEV_ADDR,PITCH_LSB,2)
+            pitch = ((data[1] << 8) | data[0]) & 0xffff
 
+            if pitch > 32767:
+                pitch -= 65536
+            return (pitch/16)+90
+
+
+    def read_gyro(self):
+
+            data = self.bus.read_i2c_block_data(DEV_ADDR,GYRO_Y_LSB,2)
+            gyro_y = ((data[1] << 8) | data[0]) & 0xffff
+
+            if gyro_y > 32767:
+                gyro_y -= 65536
+            return (gyro_y/16)
+            
+    
 if __name__ == "__main__":
+
     imu = IMU()
-    data = np.zeros((SAMPLE_COUNT, 3))
-    t0 = time.clock_gettime(0)
-
-    for i in range(SAMPLE_COUNT):
+    plotData = np.zeros((DEBBUG_LENGTH,3))
+    startTime = time.clock_gettime(0)
+    for i in range(DEBBUG_LENGTH):
         pitch = imu.read_pitch()
-        gyro_y = imu.read_gyro_y()
-        timestamp = time.clock_gettime(0) - t0
-
-        data[i] = [timestamp, pitch, gyro_y]
-        print(f"pitch: {pitch:.2f}  gyro_y: {gyro_y:.2f}")
+        gyro_y = imu.read_gyro()
+        plotData[i,1] = pitch
+        plotData[i,2] = gyro_y
+        plotData[i,0] = time.clock_gettime(0)-startTime
+        print("pitch: %f vel_y: %f"%(pitch,gyro_y))
         time.sleep(0.01)
+        
 
-    plt.plot(data[:, 0], data[:, 1])
+    plt.plot(plotData[:,0],plotData[:,1:2])
     plt.savefig("imu.png")
+    DF = pd.DataFrame(plotData)
+    DF.to_csv("IMU.csv")
+    # plt.show()
+    # while True:
+    #     time.sleep(1)
 
-    pd.DataFrame(data, columns=["Time", "Pitch", "Gyro_Y"]).to_csv("IMU.csv", index=False)
+
+        
+
+
+
+
+
+

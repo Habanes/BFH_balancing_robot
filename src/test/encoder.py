@@ -3,42 +3,55 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt
 
-SAMPLE_COUNT = 1000
 
-ENCODER_LEFT_A = 19
-ENCODER_LEFT_B = 20
-ENCODER_RIGHT_A = 9
-ENCODER_RIGHT_B = 10
+DEBBUG_LENGTH = 1000
+A_PIN  = 19
+B_PIN  = 20
+A_PIN_2 = 9
+B_PIN_2 = 10
 
-class MotorEncoder:
-    def __init__(self, is_left: bool):
-        self.invert_direction = is_left
-        pin_a = ENCODER_LEFT_A if is_left else ENCODER_RIGHT_A
-        pin_b = ENCODER_LEFT_B if is_left else ENCODER_RIGHT_B
 
-        self.encoder = RotaryEncoder(
-            pin_a,
-            pin_b,
-            max_steps=(256 * 21) / 2,
-            wrap=False
-        )
+class Encoder:
+    def __init__(self,left_right):
+
+        self.inverse_dir = left_right
         self.steps = 0.0
-
-    def read(self) -> float:
-        self.steps = -self.encoder.steps if self.invert_direction else self.encoder.steps
+        
+        #self.encoder = RotaryEncoder(self.encoder_a_pin_nr,self.encoder_b_pin_nr,max_steps=0,wrap=True)
+        self.encoder = RotaryEncoder(A_PIN if left_right else A_PIN_2,B_PIN if left_right else B_PIN_2,max_steps=(256*21)/2,wrap=False)#absolut position for the wheel
+    
+        
+    def get_steps(self):
+        self.steps = self.encoder.steps
+        if self.inverse_dir:
+            self.steps = - self.steps
         return self.steps
+    
+    
 
-if __name__ == "__main__":
-    encoder_left = MotorEncoder(is_left=True)
-    encoder_right = MotorEncoder(is_left=False)
 
-    readings = np.zeros((SAMPLE_COUNT, 2))
 
-    for i in range(SAMPLE_COUNT):
-        print(f"Left: {encoder_left.steps:.2f}  Right: {encoder_right.steps:.2f}")
-        readings[i, 0] = encoder_left.read()
-        readings[i, 1] = encoder_right.read()
+
+
+if __name__=="__main__":
+    encoder_1 = Encoder(left_right=True)
+    encoder_2 = Encoder(left_right=False)
+     
+    plotData = np.zeros((DEBBUG_LENGTH,2))
+
+    for i in range(DEBBUG_LENGTH):
+        
+        
+        
+        print("Pos Motor 1: %f  Pos Motor 2: %f"%(encoder_1.steps,encoder_2.steps))
+        plotData[i,0] = encoder_1.get_steps()
+        plotData[i,1] = encoder_2.get_steps()
+        
         time.sleep(0.01)
+        
 
-    plt.plot(readings)
+    plt.plot(plotData)
     plt.savefig("plot_encoder.png")
+    # plt.show()
+    # while True:
+    #     time.sleep(1)

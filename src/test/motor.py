@@ -1,56 +1,68 @@
-from gpiozero import DigitalOutputDevice
+from gpiozero import DigitalOutputDevice, PWMOutputDevice
 from lib.hardwarePWMLib import HardwarePWM
 import time
 
-PIN_PWM_LEFT = 13
-PIN_DIR_LEFT = 23
-PIN_EN_LEFT = 17
 
-PIN_PWM_RIGHT = 12
-PIN_DIR_RIGHT = 24
-PIN_EN_RIGHT = 18
+DEBBUG_LENGTH=1000
 
-class MotorController:
-    def __init__(self, is_left: bool):
-        pwm_channel = 1 if is_left else 0
-        dir_pin = PIN_DIR_LEFT if is_left else PIN_DIR_RIGHT
-        en_pin = PIN_EN_LEFT if is_left else PIN_EN_RIGHT
 
-        self._reverse = not is_left
-        self._pwm = HardwarePWM(pwm_channel=pwm_channel, hz=50000, chip=2)
-        self._dir = DigitalOutputDevice(pin=dir_pin)
-        self._enable = DigitalOutputDevice(pin=en_pin)
+PWM_PIN = 13
+DIR_PIN = 23
+OTHER_PIN = 17
+PWM_PIN_2 = 12
+DIR_PIN_2 = 24
+OTHER_PIN_2 = 18
 
-    def start(self):
-        self._pwm.start(0)
-        self._enable.on()
-        self.set_speed(0)
 
-    def stop(self):
-        self.set_speed(0)
-        self._pwm.stop()
-        self._enable.off()
 
-    def set_speed(self, value: float):
-        duty = 1 - min(abs(value), 1.0)
-        self._pwm.change_duty_cycle(100.0 * duty)
+class Motor:
+    def __init__(self,left_right:bool):
 
-        if (value < 0) ^ self._reverse:
-            self._dir.on()
+        self.inverse_dir = not left_right
+        self.hwPWM = HardwarePWM(pwm_channel=1 if left_right else 0,hz=50000,chip=2)
+        self.direction = DigitalOutputDevice(pin=DIR_PIN if left_right else DIR_PIN_2) 
+        self.other_pin = DigitalOutputDevice(pin=OTHER_PIN if left_right else OTHER_PIN_2)
+
+        
+
+    
+    def write_pwm(self,pwm_value):
+        pwm_value_abs = 1 - min(abs(pwm_value),1.0)
+        self.hwPWM.change_duty_cycle(100.0*pwm_value_abs)
+        if self.inverse_dir:
+            if pwm_value < 0:
+                self.direction.on()
+            else:
+                self.direction.off()
         else:
-            self._dir.off()
+            if pwm_value < 0:
+                self.direction.off()
+            else:
+                self.direction.on()
+    
+    def start_pwm(self):
+        self.hwPWM.start(0)
+        self.other_pin.on()
+        self.write_pwm(0)
+    
+    def stop_pwm(self):
+        self.hwPWM.stop()
+        self.other_pin.off()
 
-if __name__ == "__main__":
-    left_motor = MotorController(is_left=True)
-    right_motor = MotorController(is_left=False)
 
-    left_motor.start()
-    right_motor.start()
 
-    left_motor.set_speed(-0.5)
-    right_motor.set_speed(-0.5)
+if __name__=="__main__":
 
+    motor_1 = Motor(left_right=True)
+    motor_2 = Motor(left_right=False)
+     
+    motor_1.start_pwm()
+    motor_2.start_pwm()
+    
+    motor_1.write_pwm(-0.5)
+    motor_2.write_pwm(-0.5)
+    
     time.sleep(2)
 
-    left_motor.stop()
-    right_motor.stop()
+    motor_1.stop_pwm()
+    motor_2.stop_pwm()
