@@ -11,7 +11,6 @@ DEV_ADDR = 0x4B
 DEV_ADDR_2 = 0x4D
 
 
-
 class CurrentMeas:
     def __init__(self,left_right = False,bus=smbus.SMBus(DEV_BUS)) -> None:
         self.init(left_right,bus)

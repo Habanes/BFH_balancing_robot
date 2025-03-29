@@ -1,5 +1,5 @@
 from gpiozero import DigitalOutputDevice
-from lib.hardwarePWMLib import HardwarePWM
+from hardwarePWMLib import HardwarePWM
 
 PIN_PWM_LEFT = 13
 PIN_DIR_LEFT = 23
