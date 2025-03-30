@@ -1,11 +1,11 @@
 from src.interfacing.imu import IMU
 from src.interfacing.motorController import MotorController
 from src.interfacing.currentSensor import CurrentSensor
-from control.angleEsimater import AngleEstimator
-from control.angleController import AngleController
-from control.torqueController import TorqueController
-from config.configManager import ConfigManager
-from log.logManager import LogManager
+from src.control.angleEsimater import AngleEstimator
+from src.control.angleController import AngleController
+from src.control.torqueController import TorqueController
+from src.config.configManager import ConfigManager
+from src.log.logManager import LogManager
 import time
 
 # === Initialization ===
