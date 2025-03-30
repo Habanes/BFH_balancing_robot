@@ -23,9 +23,9 @@ current_right = CurrentSensor(is_left=False)
 global_log_manager.log_info("Components initialized", location="main")
 
 # === PID Controllers ===
-angle_pid = AngleController(kp=3.0, ki=0.0, kd=0.1)
-torque_pid_left = TorqueController(current_left, kp=0.1, ki=0.1, kd=0.0)
-torque_pid_right = TorqueController(current_right, kp=0.1, ki=0.1, kd=0.0)
+angle_pid = AngleController(kp=1.0, ki=0.0, kd=0.1, setpoint=0.44)
+torque_pid_left = TorqueController(current_left, kp=0.35, ki=3.0, kd=0.0)
+torque_pid_right = TorqueController(current_right, kp=0.35, ki=3.0, kd=0.0)
 
 # === Start motors ===
 global_log_manager.log_info("Starting motors", location="main")
@@ -33,8 +33,8 @@ motor_left.start()
 motor_right.start()
 
 # === Control Loop ===
-INNER_HZ = 500
-OUTER_HZ = 100
+INNER_HZ = 10000
+OUTER_HZ = 1000
 LOOP_DT = 1.0 / INNER_HZ
 OUTER_DIVIDER = int(INNER_HZ / OUTER_HZ)
 
@@ -44,7 +44,7 @@ TEST_MODE = global_config.test_mode
 
 if TEST_MODE:
     global_log_manager.log_info("Running in TEST MODE (torque only)", location="main")
-    target_torque = 0.2
+    target_torque = 0.3
 
 try:
     counter = 0

@@ -16,5 +16,5 @@ class TorqueController:
         return self.pid(measured_torque - target_torque)
 
     def _current_to_torque(self, current: float) -> float:
-        TORQUE_CONSTANT = 1.0  # Needs calibration
+        TORQUE_CONSTANT = 0.02  # Needs calibration
         return current * TORQUE_CONSTANT
