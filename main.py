@@ -23,9 +23,9 @@ current_right = CurrentSensor(is_left=False)
 global_log_manager.log_info("Components initialized", location="main")
 
 # === PID Controllers ===
-angle_pid = AngleController(kp=30.0, ki=0.0, kd=0.5)
-torque_pid_left = TorqueController(current_left, kp=0.0, ki=0.5, kd=0.0)
-torque_pid_right = TorqueController(current_right, kp=0.0, ki=0.5, kd=0.0)
+angle_pid = AngleController(kp=3.0, ki=0.0, kd=0.1)
+torque_pid_left = TorqueController(current_left, kp=0.1, ki=0.1, kd=0.0)
+torque_pid_right = TorqueController(current_right, kp=0.1, ki=0.1, kd=0.0)
 
 # === Start motors ===
 global_log_manager.log_info("Starting motors", location="main")
