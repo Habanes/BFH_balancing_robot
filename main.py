@@ -68,9 +68,21 @@ try:
         motor_right.set_speed(pwm_right)
 
         if time.time() - last_log_time >= LOG_INTERVAL:
-            global_log_manager.log_debug(f"angle={angle:.2f}, torque={target_torque:.2f}, pwmL={pwm_left:.2f}, pwmR={pwm_right:.2f}", location="loop")
-            last_log_time = time.time()
+            set_angle = angle_pid.pid.setpoint
+            raw_angle = imu.read_pitch()  # You could cache this inside AngleEstimator if needed
+            est_angle = angle
+            angle_error = set_angle - est_angle
+            measured_torque_L = torque_pid_left._current_to_torque(current_left.read_current())
+            measured_torque_R = torque_pid_right._current_to_torque(current_right.read_current())
 
+            global_log_manager.log_debug(
+                f"set={set_angle:.2f} angle={raw_angle:.2f} est={est_angle:.2f} err={angle_error:.2f} "
+                f"tgtT={target_torque:.2f} measT_L={measured_torque_L:.2f} measT_R={measured_torque_R:.2f} "
+                f"pwmL={pwm_left:.2f} pwmR={pwm_right:.2f}",
+                location="loop"
+            )
+            last_log_time = time.time()
+            
         counter += 1
         time.sleep(LOOP_DT)
 
