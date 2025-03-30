@@ -35,7 +35,7 @@ class MotorController:
     def set_speed(self, value: float):
         # Convert speed to duty cycle (inverted)
         duty = 1 - min(abs(value), 1.0)
-        self._pwm.change_duty_cycle(100.0 * duty)
+        self._pwm.set_duty_cycle(100.0 * duty)
 
         # Set direction depending on sign and motor side
         if (value < 0) ^ self._reverse:
