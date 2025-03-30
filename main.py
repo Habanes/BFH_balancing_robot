@@ -10,7 +10,6 @@ import time
 
 # === Initialization ===
 
-
 global_log_manager.log_info("Initializing components", location="main")
 imu = IMU()
 angle_estimator = AngleEstimator(imu)
@@ -34,18 +33,21 @@ motor_left.start()
 motor_right.start()
 
 # === Control Loop ===
-LOOP_HZ = 100
-LOOP_DT = 1.0 / LOOP_HZ
-LOG_INTERVAL = 0.25  # Log once every 0.25 seconds
-last_log_time = time.time()
+INNER_HZ = 500
+OUTER_HZ = 100
+LOOP_DT = 1.0 / INNER_HZ
+OUTER_DIVIDER = int(INNER_HZ / OUTER_HZ)
 
-TEST_MODE = global_config.test_mode  # Set this flag in your config
+LOG_INTERVAL = 0.25
+last_log_time = time.time()
+TEST_MODE = global_config.test_mode
 
 if TEST_MODE:
     global_log_manager.log_info("Running in TEST MODE (torque only)", location="main")
-    target_torque = 0.2  # fixed target for testing
+    target_torque = 0.2
 
 try:
+    counter = 0
     while True:
         angle = angle_estimator.get_angle()
 
@@ -55,22 +57,21 @@ try:
             motor_right.stop()
             break
 
-        if TEST_MODE:
-            pwm_left = torque_pid_left.update(target_torque)
-            pwm_right = torque_pid_right.update(target_torque)
-        else:
+        # Update outer loop every OUTER_DIVIDER cycles
+        if not TEST_MODE and counter % OUTER_DIVIDER == 0:
             target_torque = angle_pid.update(angle)
-            pwm_left = torque_pid_left.update(target_torque)
-            pwm_right = torque_pid_right.update(target_torque)
+
+        pwm_left = torque_pid_left.update(target_torque)
+        pwm_right = torque_pid_right.update(target_torque)
 
         motor_left.set_speed(pwm_left)
         motor_right.set_speed(pwm_right)
 
-        current_time = time.time()
-        if current_time - last_log_time >= LOG_INTERVAL:
+        if time.time() - last_log_time >= LOG_INTERVAL:
             global_log_manager.log_debug(f"angle={angle:.2f}, torque={target_torque:.2f}, pwmL={pwm_left:.2f}, pwmR={pwm_right:.2f}", location="loop")
-            last_log_time = current_time
+            last_log_time = time.time()
 
+        counter += 1
         time.sleep(LOOP_DT)
 
 except KeyboardInterrupt:
