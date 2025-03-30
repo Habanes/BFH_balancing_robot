@@ -27,11 +27,6 @@ class HardwarePWMError(Exception):
     pass
 
 class HardwarePWM:
-    """
-    Interface for controlling hardware PWM via sysfs on Raspberry Pi.
-    Requires: dtoverlay=pwm-2chan in /boot/config.txt and reboot.
-    """
-
     def __init__(self, channel: int, frequency_hz: float, chip: int = 0) -> None:
         if channel not in {0, 1, 2, 3}:
             raise HardwarePWMError("Only channels 0–3 are supported.")
@@ -49,6 +44,7 @@ class HardwarePWM:
         if not os.path.isdir(self._pwm_path):
             self._export_pwm()
 
+        # Set frequency once everything is ready
         while True:
             try:
                 self.set_frequency(frequency_hz)
@@ -85,8 +81,8 @@ class HardwarePWM:
             raise HardwarePWMError("Frequency must be >= 0.1 Hz.")
 
         self._frequency_hz = frequency_hz
-
         current_duty = self._duty_cycle
+
         if current_duty > 0:
             self.set_duty_cycle(0)
 
