@@ -43,7 +43,7 @@ TEST_MODE = global_config.test_mode  # Set this flag in your config
 
 if TEST_MODE:
     global_log_manager.log_info("Running in TEST MODE (torque only)", location="main")
-    target_torque = 0.5  # fixed target for testing
+    target_torque = 0.2  # fixed target for testing
 
 try:
     while True:
