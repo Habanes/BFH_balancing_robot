@@ -1,4 +1,4 @@
-from src.config import global_config
+from main import global_config
 from src.log import LogEntry
 import logging
 
