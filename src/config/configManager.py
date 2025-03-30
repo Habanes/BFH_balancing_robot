@@ -6,7 +6,7 @@ class ConfigManager:
     def __init__(self):
         print("LOADING CONFIG")
         
-        self.test_mode = True
+        self.test_mode = False
 
         # Logging
         self.debug_mode = True
