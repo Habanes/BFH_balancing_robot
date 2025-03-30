@@ -1,5 +1,5 @@
-from main import global_config
-from src.log import LogEntry
+from src.config.configManager import global_config
+from src.log.logEntry import LogEntry
 import logging
 
 class LogManager:
@@ -45,3 +45,6 @@ class LogManager:
     def get_logs(self):
         """ Returns logs as a list of lists for easy processing (e.g., CSV export). """
         return [entry.to_list() for entry in self.log_entries]
+    
+
+global_log_manager = global_log_manager = LogManager(print_to_console=global_config.print_to_console, debug_mode=global_config.debug_mode)

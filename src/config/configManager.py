@@ -15,3 +15,5 @@ class ConfigManager:
         self.valid = True
         logging.info("CONFIG LOAD SUCCESS")
         
+# Create a single ConfigManager instance
+global_config = ConfigManager()

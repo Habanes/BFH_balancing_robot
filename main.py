@@ -4,14 +4,12 @@ from src.interfacing.currentSensor import CurrentSensor
 from src.control.angleEsimater import AngleEstimator
 from src.control.angleController import AngleController
 from src.control.torqueController import TorqueController
-from src.config.configManager import ConfigManager
-from src.log.logManager import LogManager
+from src.config.configManager import global_config
+from src.log.logManager import global_log_manager
 import time
 
 # === Initialization ===
-# Create a single ConfigManager instance
-global_config = ConfigManager()
-global_log_manager = global_log_manager = LogManager(print_to_console=global_config.print_to_console, debug_mode=global_config.debug_mode)
+
 
 global_log_manager.log_info("Initializing components", location="main")
 imu = IMU()
