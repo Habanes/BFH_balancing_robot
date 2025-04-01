@@ -33,8 +33,8 @@ motor_left.start()
 motor_right.start()
 
 # === Control Loop ===
-INNER_HZ = 10000
-OUTER_HZ = 1000
+INNER_HZ = 1000
+OUTER_HZ = 100
 LOOP_DT = 1.0 / INNER_HZ
 OUTER_DIVIDER = int(INNER_HZ / OUTER_HZ)
 
