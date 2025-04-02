@@ -12,4 +12,5 @@ class AngleController:
         return self.pid(current_angle)
     
     def setTargetAngle(self, targetAngle):
-        self.pid.setpoint(targetAngle)
+        self.pid.setpoint = targetAngle
+
