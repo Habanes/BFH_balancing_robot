@@ -9,14 +9,14 @@ class ConfigManager:
         self.loopUpadeRate = 1000
         self.loopInterval = 1 / self.loopUpadeRate
         
-        self.angleoffset = 4
-        self.angleMove = 1
-        self.angleNeutral = 0 + self.angleoffset
+        self.angleoffset = 4.0
+        self.angleMove = 1.0
+        self.angleNeutral = 0.0 + self.angleoffset
     
-        self.angleRotationSpeed = 90
+        self.angleRotationSpeed = 90.0
         self.angleRotation = self.angleRotationSpeed / self.loopUpadeRate
         
-        self.angleLimit = 50
+        self.angleLimit = 50.0
         
         self.print_to_console = True
         
