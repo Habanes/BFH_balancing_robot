@@ -1,4 +1,3 @@
-# angle_controller.py
 from simple_pid import PID
 
 class AngleController:
@@ -14,3 +13,11 @@ class AngleController:
     def setTargetAngle(self, targetAngle):
         self.pid.setpoint = targetAngle
 
+    def setKp(self, kp):
+        self.pid.Kp = kp
+
+    def setKi(self, ki):
+        self.pid.Ki = ki
+
+    def setKd(self, kd):
+        self.pid.Kd = kd
