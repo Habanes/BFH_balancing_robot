@@ -19,7 +19,7 @@ class Motor:
     def __init__(self,left_right:bool):
 
         self.inverse_dir = not left_right
-        self.hwPWM = HardwarePWM(pwm_channel=1 if left_right else 0,hz=50000,chip=2)
+        self.hwPWM = HardwarePWM(pwm_channel=1 if left_right else 0,hz=50000,chip=0)
         self.direction = DigitalOutputDevice(pin=DIR_PIN if left_right else DIR_PIN_2) 
         self.other_pin = DigitalOutputDevice(pin=OTHER_PIN if left_right else OTHER_PIN_2)
 

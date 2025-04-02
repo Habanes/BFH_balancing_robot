@@ -1,93 +1,115 @@
+import threading
+import time
+import tkinter as tk
+
 from src.interfacing.imu import IMU
 from src.interfacing.motorController import MotorController
 from src.interfacing.currentSensor import CurrentSensor
-from src.control.angleEsimater import AngleEstimator
+from src.control.imu import AngleEstimator
 from src.control.angleController import AngleController
-from src.control.torqueController import TorqueController
+from src.interfacing.steeringController import steeringController
 from src.config.configManager import global_config
 from src.log.logManager import global_log_manager
-import time
+from src.interfacing.steeringGUI import steeringGUI  # adjust path if needed
 
 # === Initialization ===
-
 global_log_manager.log_info("Initializing components", location="main")
-imu = IMU()
-angle_estimator = AngleEstimator(imu)
 
+imu = IMU()
 motor_left = MotorController(is_left=True)
 motor_right = MotorController(is_left=False)
+steeringControl = steeringController()
 
-current_left = CurrentSensor(is_left=True)
-current_right = CurrentSensor(is_left=False)
-
-global_log_manager.log_info("Components initialized", location="main")
-
-# === PID Controllers ===
-angle_pid = AngleController(kp=1.0, ki=0.0, kd=0.1, setpoint=0.44)
-torque_pid_left = TorqueController(current_left, kp=0.35, ki=3.0, kd=0.0)
-torque_pid_right = TorqueController(current_right, kp=0.35, ki=3.0, kd=0.0)
-
-# === Start motors ===
-global_log_manager.log_info("Starting motors", location="main")
-motor_left.start()
-motor_right.start()
+angle_pid = AngleController(
+    steeringControl.getKpY(),
+    steeringControl.getKiY(),
+    steeringControl.getKdY(),
+    steeringControl.getAngleY()
+)
 
 # === Control Loop ===
-INNER_HZ = 1000
-OUTER_HZ = 100
-LOOP_DT = 1.0 / INNER_HZ
-OUTER_DIVIDER = int(INNER_HZ / OUTER_HZ)
-
 LOG_INTERVAL = 0.25
 last_log_time = time.time()
-TEST_MODE = global_config.test_mode
+RUNNING = True  # Flag for stopping the control loop safely
 
-if TEST_MODE:
-    global_log_manager.log_info("Running in TEST MODE (torque only)", location="main")
-    target_torque = 0.3
+def control_loop():
+    global last_log_time
+    while RUNNING:
+        estimatedAngle = imu.read_pitch()
 
-try:
-    counter = 0
-    while True:
-        angle = angle_estimator.get_angle()
-
-        if abs(angle) > 45:
-            global_log_manager.log_critical(f"Angle exceeded safe limit: {angle:.2f}. Stopping motors.", location="safety")
+        if abs(estimatedAngle) > global_config.angleLimit:
+            global_log_manager.log_critical(f"Angle exceeded safe limit: {estimatedAngle:.2f}. Stopping motors.", location="safety")
             motor_left.stop()
             motor_right.stop()
             break
 
-        # Update outer loop every OUTER_DIVIDER cycles
-        if not TEST_MODE and counter % OUTER_DIVIDER == 0:
-            target_torque = angle_pid.update(angle)
+        # Update PID target from steeringController
+        angle_pid.setTargetAngle(steeringControl.getAngleY())
 
-        pwm_left = torque_pid_left.update(target_torque)
-        pwm_right = torque_pid_right.update(target_torque)
+        # Update PID parameters from steeringController
+        angle_pid.setKp(steeringControl.getKpY())
+        angle_pid.setKi(steeringControl.getKiY())
+        angle_pid.setKd(steeringControl.getKdY())
 
-        motor_left.set_speed(pwm_left)
-        motor_right.set_speed(pwm_right)
+        target_torque = angle_pid.update(estimatedAngle)
+        motor_left.set_speed(target_torque)
+        motor_right.set_speed(target_torque)
 
         if time.time() - last_log_time >= LOG_INTERVAL:
             set_angle = angle_pid.pid.setpoint
-            raw_angle = imu.read_pitch()  # You could cache this inside AngleEstimator if needed
-            est_angle = angle
+            est_angle = estimatedAngle
             angle_error = set_angle - est_angle
-            measured_torque_L = torque_pid_left._current_to_torque(current_left.read_current())
-            measured_torque_R = torque_pid_right._current_to_torque(current_right.read_current())
 
             global_log_manager.log_debug(
-                f"set={set_angle:.2f} angle={raw_angle:.2f} est={est_angle:.2f} err={angle_error:.2f} "
-                f"tgtT={target_torque:.2f} measT_L={measured_torque_L:.2f} measT_R={measured_torque_R:.2f} "
-                f"pwmL={pwm_left:.2f} pwmR={pwm_right:.2f}",
+                f"set={set_angle:.2f}  est={est_angle:.2f} err={angle_error:.2f} "
+                f"tgtT={target_torque:.2f}",
                 location="loop"
             )
             last_log_time = time.time()
-            
-        counter += 1
-        time.sleep(LOOP_DT)
 
-except KeyboardInterrupt:
-    global_log_manager.log_warning("KeyboardInterrupt detected. Stopping motors.", location="main")
+        time.sleep(global_config.loopInterval)
+
     motor_left.stop()
     motor_right.stop()
+    global_log_manager.log_info("Control loop exited", location="main")
+
+# === GUI Thread Setup ===
+def start_gui():
+    root = tk.Tk()
+    gui = steeringGUI(root, steeringControl)
+    
+    # Add update methods to link GUI to live controller
+    def sync_kp(): steeringControl.setKpY(gui.kp.get())
+    def sync_ki(): steeringControl.setKiY(gui.ki.get())
+    def sync_kd(): steeringControl.setKdY(gui.kd.get())
+    
+    gui.update_kp = sync_kp
+    gui.update_ki = sync_ki
+    gui.update_kd = sync_kd
+
+    root.protocol("WM_DELETE_WINDOW", shutdown)
+    root.mainloop()
+
+# === Shutdown Handler ===
+def shutdown():
+    global RUNNING
+    RUNNING = False
+    global_log_manager.log_warning("Shutdown initiated by GUI or KeyboardInterrupt", location="main")
+
+# === Start Everything ===
+if __name__ == "__main__":
+    try:
+        global_log_manager.log_info("Starting motors", location="main")
+        motor_left.start()
+        motor_right.start()
+
+        loop_thread = threading.Thread(target=control_loop, daemon=True)
+        loop_thread.start()
+
+        start_gui()  # Runs in main thread
+
+    except KeyboardInterrupt:
+        shutdown()
+
+    loop_thread.join()
     global_log_manager.log_info("Shutdown complete", location="main")

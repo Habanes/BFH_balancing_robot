@@ -10,3 +10,6 @@ class AngleController:
     def update(self, current_angle: float) -> float:
         # Compute control output based on current angle
         return self.pid(current_angle)
+    
+    def setTargetAngle(self, targetAngle):
+        self.pid.setpoint(targetAngle)

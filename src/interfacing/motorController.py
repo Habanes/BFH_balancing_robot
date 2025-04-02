@@ -18,7 +18,7 @@ class MotorController:
         en_pin = PIN_EN_LEFT if is_left else PIN_EN_RIGHT
 
         self._reverse = not is_left  # Reverse direction for right motor
-        self._pwm = HardwarePWM(channel=pwm_channel, frequency_hz=50000, chip=2)
+        self._pwm = HardwarePWM(channel=pwm_channel, frequency_hz=50000, chip=0)
         self._dir = DigitalOutputDevice(pin=dir_pin)
         self._enable = DigitalOutputDevice(pin=en_pin)
 
