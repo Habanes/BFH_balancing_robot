@@ -44,6 +44,15 @@ class steeringGUI:
         ttk.Entry(pid_frame, textvariable=self.kd).grid(row=2, column=1)
         ttk.Button(pid_frame, text="Update", command=self.update_kd).grid(row=2, column=2)
 
+        # Angle Y Offset Configuration
+        offset_frame = ttk.LabelFrame(master, text="Angle Y Offset")
+        offset_frame.grid(row=2, column=0, columnspan=2, padx=10, pady=10)
+
+        self.angleYOffset = tk.DoubleVar(value=self.controller.getAngleYOffset())
+        ttk.Label(offset_frame, text="Offset").grid(row=0, column=0)
+        ttk.Entry(offset_frame, textvariable=self.angleYOffset).grid(row=0, column=1)
+        ttk.Button(offset_frame, text="Update", command=self.update_angle_y_offset).grid(row=0, column=2)
+
     def go_forward(self):
         self.controller.goForward()
         self.log_angles("Forward")
@@ -79,6 +88,10 @@ class steeringGUI:
         self.controller.setKdY(new_kd)
         print(f"[PID] Kd updated to {new_kd}")
 
+    def update_angle_y_offset(self):
+        new_offset = self.angleYOffset.get()
+        self.controller.setAngleYOffset(new_offset)
+        print(f"[OFFSET] angleYOffset updated to {new_offset}")
+
     def log_angles(self, action):
         print(f"[{action}] angleY = {self.controller.getAngleY()}, angleZ = {self.controller.getAngleZ()}")
-        

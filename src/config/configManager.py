@@ -9,9 +9,9 @@ class ConfigManager:
         self.loopUpadeRate = 1000
         self.loopInterval = 1 / self.loopUpadeRate
         
-        self.angleoffset = 4.28
+        self.initangleoffset = 4.28
         self.angleMove = 1.0
-        self.angleNeutral = 0.0 + self.angleoffset
+        self.angleNeutral = 0.0 + self.initangleoffset
     
         self.angleRotationSpeed = 90.0
         self.angleRotation = self.angleRotationSpeed / self.loopUpadeRate
@@ -24,9 +24,9 @@ class ConfigManager:
         
         self.angle_limit_time_delay = 1.0
         
-        self.init_kp = 0.15
-        self.init_ki = 0.00
-        self.init_kd = 0.05
+        self.init_kp = 0.03
+        self.init_ki = 0.03
+        self.init_kd = 0.001
         
         
 # Create a single ConfigManager instance

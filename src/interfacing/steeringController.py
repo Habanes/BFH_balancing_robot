@@ -2,7 +2,8 @@ from src.config.configManager import global_config
 
 class steeringController:
     def __init__(self):
-        self.angleY = 0.0
+        self.angleYOffset = 0.0
+        self.angleY = global_config.angleNeutral + self.angleYOffset
         self.angleZ = 0.0
         self.kpY = global_config.init_kp
         self.kiY = global_config.init_ki
@@ -28,6 +29,9 @@ class steeringController:
 
     def getKdY(self):
         return self.kdY
+    
+    def getAngleYOffset(self):
+        return self.angleYOffset
 
     def setKpY(self, value):
         self.kpY = value
@@ -37,6 +41,9 @@ class steeringController:
 
     def setKdY(self, value):
         self.kdY = value
+        
+    def setAngleYOffset(self, value):
+        self.angleYOffset = value
 
     def goForward(self):
         self.angleY = global_config.angleMove
