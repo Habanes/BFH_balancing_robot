@@ -2,11 +2,11 @@ from src.config.configManager import global_config
 
 class steeringController:
     def __init__(self):
-        self.angleY = 0
-        self.angleZ = 0
-        self.kpY = 1
-        self.kiY = 0
-        self.kdY = 0
+        self.angleY = 0.0
+        self.angleZ = 0.0
+        self.kpY = 1.0
+        self.kiY = 0.0
+        self.kdY = 0.0
 
     def getAngleY(self):
         return self.angleY
