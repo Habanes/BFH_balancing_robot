@@ -9,7 +9,7 @@ class ConfigManager:
         self.loopUpadeRate = 1000
         self.loopInterval = 1 / self.loopUpadeRate
         
-        self.angleoffset = 4.0
+        self.angleoffset = 4.28
         self.angleMove = 1.0
         self.angleNeutral = 0.0 + self.angleoffset
     
