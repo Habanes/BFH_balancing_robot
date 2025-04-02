@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
-from src.config.configManager import ConfigManager
+from src.config.configManager import global_config
 
 class steeringGUI:
     def __init__(self, master, controller):
