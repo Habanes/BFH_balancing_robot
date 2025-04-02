@@ -27,9 +27,9 @@ class steeringGUI:
         pid_frame = ttk.LabelFrame(master, text="PID Settings")
         pid_frame.grid(row=1, column=0, columnspan=2, padx=10, pady=10)
 
-        self.kp = tk.DoubleVar(value=1.0)
+        self.kp = tk.DoubleVar(value=0.01)
         self.ki = tk.DoubleVar(value=0.0)
-        self.kd = tk.DoubleVar(value=0.1)
+        self.kd = tk.DoubleVar(value=20)
 
         ttk.Label(pid_frame, text="Kp").grid(row=0, column=0)
         ttk.Entry(pid_frame, textvariable=self.kp).grid(row=0, column=1)
@@ -64,13 +64,19 @@ class steeringGUI:
         self.log_angles(command)
 
     def update_kp(self):
-        print(f"[PID] Kp updated to {self.kp.get()}")
+        new_kp = self.kp.get()
+        self.controller.setKpY(new_kp)
+        print(f"[PID] Kp updated to {new_kp}")
 
     def update_ki(self):
-        print(f"[PID] Ki updated to {self.ki.get()}")
+        new_ki = self.ki.get()
+        self.controller.setKiY(new_ki)
+        print(f"[PID] Ki updated to {new_ki}")
 
     def update_kd(self):
-        print(f"[PID] Kd updated to {self.kd.get()}")
+        new_kd = self.kd.get()
+        self.controller.setKdY(new_kd)
+        print(f"[PID] Kd updated to {new_kd}")
 
     def log_angles(self, action):
         print(f"[{action}] angleY = {self.controller.getAngleY()}, angleZ = {self.controller.getAngleZ()}")
