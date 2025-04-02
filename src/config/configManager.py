@@ -20,6 +20,8 @@ class ConfigManager:
         
         self.print_to_console = True
         
+        self.debug_mode = True
+        
         
 # Create a single ConfigManager instance
 global_config = ConfigManager()
