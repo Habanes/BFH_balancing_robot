@@ -18,6 +18,8 @@ class ConfigManager:
         
         self.angleLimit = 50
         
+        self.print_to_console = True
+        
         
 # Create a single ConfigManager instance
 global_config = ConfigManager()
