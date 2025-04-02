@@ -5,7 +5,6 @@ import tkinter as tk
 from src.interfacing.imu import IMU
 from src.interfacing.motorController import MotorController
 from src.interfacing.currentSensor import CurrentSensor
-from src.control.imu import AngleEstimator
 from src.control.angleController import AngleController
 from src.interfacing.steeringController import steeringController
 from src.config.configManager import global_config

@@ -1,4 +1,4 @@
-from config.configManager import global_config
+from src.config.configManager import global_config
 
 class steeringController:
     def __init__(self):
