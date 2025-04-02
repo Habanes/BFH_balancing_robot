@@ -4,9 +4,9 @@ class steeringController:
     def __init__(self):
         self.angleY = 0.0
         self.angleZ = 0.0
-        self.kpY = 0.01
-        self.kiY = 50
-        self.kdY = 0.0
+        self.kpY = global_config.init_kp
+        self.kiY = global_config.init_ki
+        self.kdY = global_config.init_kd
 
     def getAngleY(self):
         return self.angleY

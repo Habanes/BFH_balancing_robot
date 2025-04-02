@@ -24,6 +24,10 @@ class ConfigManager:
         
         self.angle_limit_time_delay = 1.0
         
+        self.init_kp = 0.15
+        self.init_ki = 0.00
+        self.init_kd = 0.05
+        
         
 # Create a single ConfigManager instance
 global_config = ConfigManager()

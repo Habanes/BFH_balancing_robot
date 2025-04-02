@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
+from src.config.configManager import ConfigManager
 
 class steeringGUI:
     def __init__(self, master, controller):
@@ -27,9 +28,9 @@ class steeringGUI:
         pid_frame = ttk.LabelFrame(master, text="PID Settings")
         pid_frame.grid(row=1, column=0, columnspan=2, padx=10, pady=10)
 
-        self.kp = tk.DoubleVar(value=0.01)
-        self.ki = tk.DoubleVar(value=0.0)
-        self.kd = tk.DoubleVar(value=20)
+        self.kp = tk.DoubleVar(value=global_config.init_kp)
+        self.ki = tk.DoubleVar(value=global_config.init_ki)
+        self.kd = tk.DoubleVar(value=global_config.init_kd)
 
         ttk.Label(pid_frame, text="Kp").grid(row=0, column=0)
         ttk.Entry(pid_frame, textvariable=self.kp).grid(row=0, column=1)
