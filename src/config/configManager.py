@@ -22,6 +22,8 @@ class ConfigManager:
         
         self.debug_mode = True
         
+        self.angle_limit_time_delay = 1.0
+        
         
 # Create a single ConfigManager instance
 global_config = ConfigManager()

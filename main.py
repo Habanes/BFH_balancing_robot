@@ -33,19 +33,21 @@ RUNNING = True  # Flag for stopping the control loop safely
 
 def control_loop():
     global last_log_time
+    start_time = time.time()  # Store the time when loop starts
+
     while RUNNING:
         estimatedAngle = imu.read_pitch()
+        current_time = time.time()
 
-        if abs(estimatedAngle) > global_config.angleLimit:
+        # Enforce angle limit only after 1 second has passed
+        if current_time - start_time > global_config.angle_limit_time_delay and abs(estimatedAngle) > global_config.angleLimit:
             global_log_manager.log_critical(f"Angle exceeded safe limit: {estimatedAngle:.2f}. Stopping motors.", location="safety")
             motor_left.stop()
             motor_right.stop()
             break
 
-        # Update PID target from steeringController
+        # Update PID target and parameters from steeringController
         angle_pid.setTargetAngle(steeringControl.getAngleY())
-
-        # Update PID parameters from steeringController
         angle_pid.setKp(steeringControl.getKpY())
         angle_pid.setKi(steeringControl.getKiY())
         angle_pid.setKd(steeringControl.getKdY())
@@ -54,7 +56,7 @@ def control_loop():
         motor_left.set_speed(target_torque)
         motor_right.set_speed(target_torque)
 
-        if time.time() - last_log_time >= LOG_INTERVAL:
+        if current_time - last_log_time >= LOG_INTERVAL:
             set_angle = angle_pid.pid.setpoint
             est_angle = estimatedAngle
             angle_error = set_angle - est_angle
@@ -64,7 +66,7 @@ def control_loop():
                 f"tgtT={target_torque:.2f}",
                 location="loop"
             )
-            last_log_time = time.time()
+            last_log_time = current_time
 
         time.sleep(global_config.loopInterval)
 
