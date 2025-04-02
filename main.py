@@ -36,7 +36,7 @@ def control_loop():
     start_time = time.time()  # Store the time when loop starts
 
     while RUNNING:
-        estimatedAngle = imu.read_pitch()
+        estimatedAngle = - imu.read_pitch()
         current_time = time.time()
 
         # Enforce angle limit only after 1 second has passed
