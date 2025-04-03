@@ -44,6 +44,7 @@ class steeringController:
         
     def setAngleYOffset(self, value):
         self.angleYOffset = value
+        self.angleY = global_config.angleNeutral + self.angleYOffset
 
     def goForward(self):
         self.angleY = global_config.angleMove
