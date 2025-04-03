@@ -1,18 +1,12 @@
 import tkinter as tk
 from tkinter import ttk
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
-from collections import deque
-
 from src.config.configManager import global_config
 
 class steeringGUI:
-    def __init__(self, master, controller, imu):
+    def __init__(self, master, controller):
         self.master = master
         self.master.title("Self-Balancing Robot Control")
         self.controller = controller
-        self.imu = imu
 
         # Control Buttons (Direction)
         control_frame = ttk.LabelFrame(master, text="Directional Controls")
@@ -59,20 +53,6 @@ class steeringGUI:
         ttk.Entry(offset_frame, textvariable=self.angleYOffset).grid(row=0, column=1)
         ttk.Button(offset_frame, text="Update", command=self.update_angle_y_offset).grid(row=0, column=2)
 
-        # === Live Plot Frame ===
-        plot_frame = ttk.LabelFrame(master, text="Live PID Plot")
-        plot_frame.grid(row=3, column=0, columnspan=2, padx=10, pady=10)
-
-        self.fig, self.ax = plt.subplots(figsize=(6, 3), dpi=100)
-        self.canvas = FigureCanvasTkAgg(self.fig, master=plot_frame)
-        self.canvas.get_tk_widget().pack()
-
-        self.set_angles = deque(maxlen=100)
-        self.est_angles = deque(maxlen=100)
-        self.errors = deque(maxlen=100)
-
-        self.ani = FuncAnimation(self.fig, self.update_plot, interval=200)
-
     def go_forward(self):
         self.controller.goForward()
         self.log_angles("Forward")
@@ -115,23 +95,3 @@ class steeringGUI:
 
     def log_angles(self, action):
         print(f"[{action}] angleY = {self.controller.getAngleY()}, angleZ = {self.controller.getAngleZ()}")
-
-    def update_plot(self, frame):
-        try:
-            est_angle = -self.imu.read_pitch()
-            set_angle = self.controller.getAngleY()
-            error = set_angle - est_angle
-
-            self.set_angles.append(set_angle)
-            self.est_angles.append(est_angle)
-            self.errors.append(error)
-
-            self.ax.clear()
-            self.ax.plot(self.set_angles, label="Setpoint")
-            self.ax.plot(self.est_angles, label="Estimated")
-            self.ax.plot(self.errors, label="Error")
-            self.ax.set_ylim(-90, 90)
-            self.ax.legend(loc="upper right")
-            self.ax.set_title("Live PID Tracking")
-        except Exception as e:
-            print(f"[PLOT ERROR] {e}")
