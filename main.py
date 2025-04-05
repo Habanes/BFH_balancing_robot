@@ -34,7 +34,8 @@ else:
     from src.hardware.motorController import MotorController
 
     imu = IMU()
-    motor_encoder = MotorEncoder(True)
+    motor_encoder_left = MotorEncoder(True)
+    motor_encoder_right = MotorEncoder(False)
     motor_left = MotorController(is_left=True)
     motor_right = MotorController(is_left=False)
 
@@ -69,7 +70,7 @@ def control_loop():
         # === Sensor readings ===
         estimated_tilt_angle = -imu.read_pitch()
         z_angular_velocity = imu.read_gyro_z()
-        measured_velocity = (motor_left.get_steps() + motor_right.get_steps()) / 2
+        measured_velocity = (motor_encoder_left.get_steps() + motor_encoder_right.get_steps()) / 2
         measured_current = (motor_left.get_current() + motor_right.get_current()) / 2
 
         # === Safety check ===
