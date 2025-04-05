@@ -75,7 +75,7 @@ def control_loop():
         estimated_tilt_angle = -imu.read_pitch()
         z_angular_velocity = imu.read_gyro_z()
         measured_velocity = (motor_encoder_left.get_steps() + motor_encoder_right.get_steps()) / 2
-        measured_current = (current_sensor_left.get_current() + current_sensor_right.get_current()) / 2
+        measured_current = (current_sensor_left.read_current() + current_sensor_right.read_current()) / 2
 
         # === Safety check ===
         if current_time - start_time > global_config.angle_limit_time_delay and abs(estimated_tilt_angle) > global_config.angle_limit:
