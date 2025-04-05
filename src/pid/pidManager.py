@@ -8,7 +8,7 @@ class pidManager:
     def __init__(self):
         self.pid_angular_velocity_to_torque_differential = PIDAngularVelocityToTorqueDifferential(1.0, 1.0, 1.0)
         self.pid_estimated_torque_to_torque = PIDEstimatedTorqueToTorque(1.0, 1.0, 1.0)
-        self.pid_tilt_angle_to_torque = PIDTiltAngleToTorque(1.0, 1.0, 1.0)
+        self.pid_tilt_angle_to_torque = PIDTiltAngleToTorque(0.03, 0.2, 0.01)
         self.pid_velocity_to_tilt_angle = PIDVelocityToTiltAngle(1.0, 1.0, 1.0)
 
         self._angle_y_offset = 0.0

@@ -4,8 +4,8 @@ class ConfigManager:
         
         self.test_mode = True
         
-        self.enable_velocity_loop = True
-        self.enable_yaw_loop = True
+        self.enable_velocity_loop = False
+        self.enable_yaw_loop = False
         self.enable_torque_feedback_loop = False
 
 
