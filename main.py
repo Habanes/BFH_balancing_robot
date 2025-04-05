@@ -6,6 +6,7 @@ from src.config.configManager import global_config
 from src.pid.pidManager import pidManager
 from src.log.logManager import global_log_manager
 from src.user_input.steeringGUI import SteeringGUI
+from src.hardware.motorEncoder import MotorEncoder
 
 # === Global GUI reference ===
 gui = None
@@ -27,11 +28,13 @@ if global_config.test_mode:
     imu = sim
     motor_left = sim
     motor_right = sim
+
 else:
     from src.hardware.imu import IMU
     from src.hardware.motorController import MotorController
 
     imu = IMU()
+    motor_encoder = MotorEncoder()
     motor_left = MotorController(is_left=True)
     motor_right = MotorController(is_left=False)
 
