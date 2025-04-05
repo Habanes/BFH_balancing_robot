@@ -7,8 +7,9 @@ from src.pid.pidManager import pidManager
 from src.log.logManager import global_log_manager
 from src.user_input.steeringGUI import SteeringGUI
 from src.hardware.motorEncoder import MotorEncoder
+from src.hardware.currentSensor import CurrentSensor
 
-# === Global GUI reference ===
+    # === Global GUI reference ===
 gui = None
 
 # === Initialization ===
@@ -34,10 +35,13 @@ else:
     from src.hardware.motorController import MotorController
 
     imu = IMU()
-    motor_encoder_left = MotorEncoder(True)
-    motor_encoder_right = MotorEncoder(False)
+    motor_encoder_left = MotorEncoder(is_left=True)
+    motor_encoder_right = MotorEncoder(is_left=False)
     motor_left = MotorController(is_left=True)
     motor_right = MotorController(is_left=False)
+    current_sensor_left = CurrentSensor(is_left=True)
+    current_sensor_right = CurrentSensor(is_left=False)
+
 
 pid_manager = pidManager()
 
@@ -71,7 +75,7 @@ def control_loop():
         estimated_tilt_angle = -imu.read_pitch()
         z_angular_velocity = imu.read_gyro_z()
         measured_velocity = (motor_encoder_left.get_steps() + motor_encoder_right.get_steps()) / 2
-        measured_current = (motor_left.get_current() + motor_right.get_current()) / 2
+        measured_current = (current_sensor_left.get_current() + current_sensor_right.get_current()) / 2
 
         # === Safety check ===
         if current_time - start_time > global_config.angle_limit_time_delay and abs(estimated_tilt_angle) > global_config.angle_limit:
