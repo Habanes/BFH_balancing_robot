@@ -1,5 +1,5 @@
 from gpiozero import DigitalOutputDevice
-from src.interfacing.hardwarePWMLib import HardwarePWM
+from src.hardware.hardwarePWMLib import HardwarePWM
 
 # GPIO pin mappings for both motors
 PIN_PWM_LEFT = 13
