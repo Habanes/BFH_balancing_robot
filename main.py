@@ -24,7 +24,7 @@ global_log_manager.log_info(
 # Use simulator if test mode is on
 if global_config.test_mode:
     from src.hardware.sensorSimulator import SensorSimulator
-    sim = SensorSimulator(True)
+    sim = SensorSimulator()
     imu = sim
     motor_left = sim
     motor_right = sim
@@ -34,7 +34,7 @@ else:
     from src.hardware.motorController import MotorController
 
     imu = IMU()
-    motor_encoder = MotorEncoder()
+    motor_encoder = MotorEncoder(True)
     motor_left = MotorController(is_left=True)
     motor_right = MotorController(is_left=False)
 
