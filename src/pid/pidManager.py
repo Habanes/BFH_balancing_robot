@@ -25,9 +25,9 @@ class pidManager:
         self.update_pid_target()
 
     def goForward(self):
-        self.base_target_angle = global_config.angle_move
+        self.base_target_angle = global_config.angle_neutral + global_config.angle_move
         self.update_pid_target()
 
     def goBackward(self):
-        self.base_target_angle = -global_config.angle_move
+        self.base_target_angle = global_config.angle_neutral - global_config.angle_move
         self.update_pid_target()
