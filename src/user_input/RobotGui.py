@@ -66,7 +66,7 @@ class RobotGui:
 
     def build_joystick(self):
         tk.Label(self.root, text="Joystick (Y-axis)").grid(row=11, column=0)
-        self.joystick = tk.Scale(self.root, from_=10, to=-10, orient=tk.VERTICAL, command=self.update_control_angle)
+        self.joystick = tk.Scale(self.root, from_=20, to=-20, orient=tk.VERTICAL, command=self.update_control_angle)
         self.joystick.set(0)
         self.joystick.grid(row=12, column=0, rowspan=3)
 
