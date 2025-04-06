@@ -5,7 +5,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import time
 import threading
 import numpy as np
-from imu import IMU  # Your hardware interface
+from src.hardware.imu import IMU  # Your hardware interface
 import smbus2 as smbus
 
 # === CONFIG ===
