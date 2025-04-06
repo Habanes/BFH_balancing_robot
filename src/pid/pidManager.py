@@ -25,6 +25,11 @@ class pidManager:
         self.adjusted_neutral_angle_y = global_config.angle_neutral + value
 
     # === Preset Movement Commands ===
+    
+    def set_dynamic_target_angle_offset(self,value):
+        self.dynamic_target_angle_offset = value
+        print(f"dynamic angle target offset: {self.dynamic_target_angle_offset}")
+    
     def stop(self):
         self.pid_tilt_angle_to_torque.target_angle = global_config.angle_neutral
         print(f"stop tgt: {self.pid_tilt_angle_to_torque.target_angle}")

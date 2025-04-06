@@ -10,12 +10,15 @@ class RobotGui:
 
         self.entries = {}
         self.angle_var = tk.StringVar()
+        self.tgtangle_var = tk.StringVar()
         self.error_var = tk.StringVar()
         self.torque_var = tk.StringVar()
+        self.offset_entry = None
 
         self.build_pid_controls()
         self.build_status_labels()
         self.build_control_buttons()
+        self.build_offset_input()
         self.bind_keys()
         self.refresh_values()
 
@@ -34,6 +37,7 @@ class RobotGui:
     def build_status_labels(self):
         labels = [
             ("Current Angle", self.angle_var),
+            ("Target Angle", self.tgtangle_var),
             ("Angle Error",  self.error_var),
             ("Torque",       self.torque_var),
         ]
@@ -49,8 +53,22 @@ class RobotGui:
             ("Go Backward (S)", self.pid_manager.goBackward),
         ]
 
-        for i, (label, command) in enumerate(button_config, start=7):
+        for i, (label, command) in enumerate(button_config, start=8):
             tk.Button(self.root, text=label, command=command).grid(row=i, column=0, columnspan=3, sticky="we", pady=2)
+
+    def build_offset_input(self):
+        tk.Label(self.root, text="Dynamic Offset").grid(row=7, column=0)
+        self.offset_entry = tk.Entry(self.root)
+        self.offset_entry.grid(row=7, column=1)
+
+        tk.Button(self.root, text="Set Dynamic Offset", command=self.set_dynamic_offset).grid(row=7, column=2)
+
+    def set_dynamic_offset(self):
+        try:
+            offset_value = float(self.offset_entry.get())
+            self.pid_manager.set_dynamic_target_angle_offset(offset_value)
+        except ValueError:
+            print("Invalid input for dynamic offset.")
 
     def bind_keys(self):
         self.root.bind("<w>", lambda event: self.pid_manager.goForward())
@@ -70,6 +88,7 @@ class RobotGui:
         error = target_angle - current_angle
 
         self.angle_var.set(f"{current_angle:.2f}")
+        self.tgtangle_var.set(f"{target_angle:.2f}")
         self.error_var.set(f"{error:.2f}")
         self.torque_var.set(f"{torque:.2f}")
 
