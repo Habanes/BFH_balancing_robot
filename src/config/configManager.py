@@ -2,7 +2,7 @@ class ConfigManager:
     def __init__(self):
         print("LOADING CONFIG")
         
-        self.test_mode = True
+        self.test_mode = False
         
         self.enable_velocity_loop = False
         self.enable_yaw_loop = False
