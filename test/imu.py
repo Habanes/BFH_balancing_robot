@@ -58,32 +58,6 @@ class IMU:
             if gyro_y > 32767:
                 gyro_y -= 65536
             return (gyro_y/16)
-            
-    
-if __name__ == "__main__":
-
-    imu = IMU()
-    plotData = np.zeros((DEBBUG_LENGTH,3))
-    startTime = time.clock_gettime(0)
-    for i in range(DEBBUG_LENGTH):
-        pitch = imu.read_pitch()
-        gyro_y = imu.read_gyro()
-        plotData[i,1] = pitch
-        plotData[i,2] = gyro_y
-        plotData[i,0] = time.clock_gettime(0)-startTime
-        print("pitch: %f vel_y: %f"%(pitch,gyro_y))
-        time.sleep(0.01)
-        
-
-    plt.plot(plotData[:,0],plotData[:,1:2])
-    plt.savefig("imu.png")
-    DF = pd.DataFrame(plotData)
-    DF.to_csv("IMU.csv")
-    # plt.show()
-    # while True:
-    #     time.sleep(1)
-
-
         
 
 

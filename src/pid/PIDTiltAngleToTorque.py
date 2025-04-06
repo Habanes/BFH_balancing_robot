@@ -2,7 +2,7 @@ from simple_pid import PID
 from src.config.configManager import global_config
 
 class PIDTiltAngleToTorque:
-    def __init__(self, kp, ki, kd, setpoint=0.0,
+    def __init__(self, kp, ki, kd, setpoint=global_config.angle_neutral,
                  output_limits=(-global_config.torque_limit, global_config.torque_limit)):
         self.pid = PID(kp, ki, kd, setpoint=setpoint)
         self.pid.output_limits = output_limits

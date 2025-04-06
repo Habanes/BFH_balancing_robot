@@ -24,7 +24,7 @@ class ConfigManager:
         # === Motion and angle settings ===
         self.base_velocity = 0.1
         self.angle_neutral = 0.0
-        self.angle_offset = 180 - 173.75 - 6.7
+        self.angle_offset = 6.7
         self.angle_rotation_speed = 90.0  # degrees per second
         self.angle_rotation = self.angle_rotation_speed / self.main_loop_rate
         self.angle_limit = 60.0
