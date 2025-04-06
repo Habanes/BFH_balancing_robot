@@ -12,7 +12,7 @@ class pidManager:
     
     def set_dynamic_target_angle_offset(self,value):
         self.dynamic_target_angle_offset = value
-        self.pid_tilt_angle_to_torque.target_angle = self.pid_tilt_angle_to_torque.target_angle + self.dynamic_target_angle_offset
+        self.pid_tilt_angle_to_torque.target_angle = global_config.angle_neutral + self.dynamic_target_angle_offset
         print(f"dynamic angle target offset: {self.dynamic_target_angle_offset}")
     
     def stop(self):
