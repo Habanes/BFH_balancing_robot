@@ -27,9 +27,12 @@ class pidManager:
     # === Preset Movement Commands ===
     def stop(self):
         self.pid_tilt_angle_to_torque.target_angle = 0.0
+        print(f"stop tgt: {self.pid_tilt_angle_to_torque.target_angle}")
 
     def goForward(self):
         self.pid_tilt_angle_to_torque.target_angle = 1.0
+        print(f"fwd tgt: {self.pid_tilt_angle_to_torque.target_angle}")
 
     def goBackward(self):
         self.pid_tilt_angle_to_torque.target_angle = - 1.0
+        print(f"back tgt: {self.pid_tilt_angle_to_torque.target_angle}")
