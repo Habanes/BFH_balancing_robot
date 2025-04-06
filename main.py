@@ -90,7 +90,7 @@ def control_loop():
             # Loop: Tilt Angle → Torque (always active)
             if current_time - last_tilt_to_torque_time >= global_config.tilt_angle_to_torque_interval:
                 target_angle = global_config.angle_neutral
-                target_torque = pid_manager.pid_tilt_angle_to_torque(estimated_tilt_angle - target_angle)
+                target_torque = pid_manager.pid_tilt_angle_to_torque.update(estimated_tilt_angle - target_angle)
                 last_tilt_to_torque_time = current_time
                 
              # === Motor Commands ===
