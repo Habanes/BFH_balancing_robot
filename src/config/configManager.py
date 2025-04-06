@@ -32,7 +32,7 @@ class ConfigManager:
         self.angle_neutral = ((174.88 + 174.56)/ 2 - 180)
         self.angle_rotation_speed = 90.0  # degrees per second
         self.angle_rotation = self.angle_rotation_speed / self.main_loop_rate
-        self.angle_limit = 50.0
+        self.angle_limit = 80.0
         self.tilt_angle_soft_limit = 0.9 * self.angle_limit
 
         # === Output limitations ===
