@@ -4,10 +4,11 @@ from src.pid.pidManager import pidManager
 from src.config.configManager import global_config
 
 class SteeringGUI:
-    def __init__(self, master, pid_manager: pidManager):
-        self.master = master
-        self.master.title("Robot Control Panel")
+    def __init__(self, master, pid_manager: pidManager, shutdown_callback):
+        self.root = master  # renamed from master to root
+        self.root.title("Robot Control Panel")
         self.pid_manager = pid_manager
+        self.shutdown_callback = shutdown_callback
 
         # Style
         self.style = ttk.Style()

@@ -5,9 +5,7 @@ import tkinter as tk
 from src.config.configManager import global_config
 from src.pid.pidManager import pidManager
 from src.log.logManager import global_log_manager
-from src.user_input.steeringGUI import SteeringGUI
-from src.hardware.motorEncoder import MotorEncoder
-from src.hardware.currentSensor import CurrentSensor
+from src.user_input.steeringGUILight import SteeringGUI
 
 # === Global GUI reference ===
 gui = None
@@ -109,8 +107,8 @@ def control_loop():
 def start_gui():
     global gui
     root = tk.Tk()
-    gui = SteeringGUI(root, pid_manager)
-    gui.root = root  # Needed for thread-safe `after()` usage
+    gui = SteeringGUI(root, pid_manager, shutdown)
+    gui.root = root  # used by safe_update_gui
     root.protocol("WM_DELETE_WINDOW", shutdown)
     root.mainloop()
 
