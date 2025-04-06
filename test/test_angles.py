@@ -7,7 +7,6 @@ import threading
 import numpy as np
 from imu import IMU  # Your hardware interface
 import smbus2 as smbus
-from scipy.signal import find_peaks
 
 # === CONFIG ===
 PLOT_DURATION = 20  # seconds
@@ -119,14 +118,19 @@ class InertiaGUI:
         angles = np.array(self.angles)
         times = np.array(self.times)
 
-        peaks, _ = find_peaks(angles, prominence=2.0)
+        # Simple peak detection without scipy
+        peaks = []
+        for i in range(1, len(angles) - 1):
+            if angles[i - 1] < angles[i] > angles[i + 1] and angles[i] > 2.0:
+                peaks.append(i)
+
         if len(peaks) < 2:
             self.period_var.set("Estimated Period: Too few peaks")
             return
 
         peak_times = times[peaks]
-        periods = np.diff(peak_times)
-        avg_period = np.mean(periods)
+        periods = [peak_times[i+1] - peak_times[i] for i in range(len(peak_times)-1)]
+        avg_period = sum(periods) / len(periods)
 
         self.period_var.set(f"Estimated Period: {avg_period:.3f} s")
 
