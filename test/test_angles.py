@@ -22,8 +22,8 @@ class InertiaGUI:
         self.imu = IMU(self.bus)
 
         self.running = False
-        self.reset_data()
-        self.setup_widgets()
+        self.setup_widgets()     # Moved up
+        self.reset_data()        # Moved down
         self.update_labels_loop()
 
     def reset_data(self):
