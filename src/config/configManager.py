@@ -39,7 +39,7 @@ class ConfigManager:
         self.print_to_console = True
         self.debug_mode = True
         
-        global_config.angle_move = 5
+        self.angle_move = 5
 
 
 # Create a single ConfigManager instance
