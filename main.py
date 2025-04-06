@@ -46,8 +46,6 @@ def control_loop():
     start_time = time.time()
     target_torque = 0.0  # ensure it's initialized
 
-    motor_left.start()
-    motor_right.start()
 
     while RUNNING:
         current_time = time.time()
@@ -62,7 +60,6 @@ def control_loop():
             )
             motor_left.stop()
             motor_right.stop()
-            break
 
         # === Control loops ===
         target_torque = pid_manager.pid_tilt_angle_to_torque.update(estimated_tilt_angle)
