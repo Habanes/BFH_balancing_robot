@@ -106,7 +106,8 @@ if __name__ == "__main__":
 
         from src.user_input.RobotGui import RobotGui
         root = tk.Tk()
-        gui = RobotGui(root)
+        # Pass the actual pid_manager instance to RobotGui
+        gui = RobotGui(root, pid_manager)
         root.mainloop()
 
     except KeyboardInterrupt:
