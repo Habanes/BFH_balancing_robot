@@ -3,13 +3,7 @@ class ConfigManager:
         print("LOADING CONFIG")
         
         self.test_mode = False
-        
-        self.enable_velocity_loop = False
-        self.enable_yaw_loop = False
-        self.enable_torque_feedback_loop = False
-        
-        self.only_angle_loop = not(self.enable_velocity_loop or self.enable_yaw_loop or self.enable_torque_feedback_loop)
-
+    
 
         # === Control loop update rates (Hz) ===
         self.velocity_to_tilt_angle_rate = 1000             # velocity → desired tilt angle
@@ -29,20 +23,16 @@ class ConfigManager:
 
         # === Motion and angle settings ===
         self.base_velocity = 0.1
-        self.angle_neutral = ((174.88 + 174.56)/ 2 - 180)
+        self.angle_neutral = 0.0
+        self.angle_offset = ((174.88 + 174.56)/ 2 - 180)
         self.angle_rotation_speed = 90.0  # degrees per second
         self.angle_rotation = self.angle_rotation_speed / self.main_loop_rate
-        self.angle_limit = 80.0
+        self.angle_limit = 90.0
         self.tilt_angle_soft_limit = 0.9 * self.angle_limit
 
         # === Output limitations ===
         self.torque_limit = 1.0
         self.torque_differential_limit = 0.1
-
-        # === PID initial gains ===
-        self.init_kp = 0.02
-        self.init_ki = 0.2
-        self.init_kd = 0.001
 
         # === Other ===
         self.angle_limit_time_delay = 1.0

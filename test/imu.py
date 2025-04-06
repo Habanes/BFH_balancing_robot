@@ -3,6 +3,7 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+from src.config.configManager import global_config
 
 
 DEBBUG_LENGTH = 1000
@@ -46,7 +47,7 @@ class IMU:
 
             if pitch > 32767:
                 pitch -= 65536
-            return (pitch/16)+90
+            return (pitch/16)+90 + global_config.angle_offset
 
 
     def read_gyro(self):

@@ -1,9 +1,14 @@
 import threading
 import time
+import tkinter as tk
 
 from src.config.configManager import global_config
 from src.pid.pidManager import pidManager
 from src.log.logManager import global_log_manager
+
+# === Shared Variables for GUI ===
+latest_angle = 0.0
+latest_torque = 0.0
 
 # === Initialization ===
 global_log_manager.log_info("Initializing components", location="main")
@@ -32,8 +37,8 @@ RUNNING = True
 last_tilt_to_torque_time = 0
 
 def control_loop():
-    global last_log_time
-    global last_tilt_to_torque_time
+    global last_log_time, last_tilt_to_torque_time
+    global latest_angle, latest_torque
 
     start_time = time.time()
     target_torque = 0.0  # ensure it's initialized
@@ -65,6 +70,10 @@ def control_loop():
         motor_left.set_speed(target_torque)
         motor_right.set_speed(target_torque)
 
+        # === Update shared values for GUI ===
+        latest_angle = estimated_tilt_angle
+        latest_torque = target_torque
+
         # === Logging ===
         if current_time - last_log_time >= LOG_INTERVAL:
             global_log_manager.log_debug(
@@ -95,8 +104,10 @@ if __name__ == "__main__":
         loop_thread = threading.Thread(target=control_loop, daemon=True)
         loop_thread.start()
 
-        while loop_thread.is_alive():
-            time.sleep(0.1)
+        from src.user_input.RobotGui import RobotGui
+        root = tk.Tk()
+        gui = RobotGui(root)
+        root.mainloop()
 
     except KeyboardInterrupt:
         shutdown()
