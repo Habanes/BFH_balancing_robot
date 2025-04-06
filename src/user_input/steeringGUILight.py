@@ -1,91 +1,105 @@
-import tkinter as tk
-from tkinter import ttk
-from src.pid.pidManager import pidManager
+import threading
+import time
+
 from src.config.configManager import global_config
+from src.pid.pidManager import pidManager
+from src.log.logManager import global_log_manager
 
-class SteeringGUI:
-    def __init__(self, master, pid_manager: pidManager, shutdown_callback):
-        self.root = master  # renamed from master to root
-        self.root.title("Robot Control Panel")
-        self.pid_manager = pid_manager
-        self.shutdown_callback = shutdown_callback
+# === Initialization ===
+global_log_manager.log_info("Initializing components", location="main")
 
-        # Style
-        self.style = ttk.Style()
-        self.style.configure("Flashing.TButton", background="yellow")
+# Use simulator if test mode is on
+if global_config.test_mode:
+    from src.hardware.sensorSimulator import SensorSimulator
+    sim = SensorSimulator()
+    imu = sim
+    motor_left = sim
+    motor_right = sim
+else:
+    from src.hardware.imu import IMU
+    from src.hardware.motorController import MotorController
 
-        # === Shutdown ===
-        shutdown_frame = ttk.Frame(master)
-        shutdown_frame.grid(row=0, column=1, padx=10, pady=10, sticky="n")
-        self.btn_shutdown = ttk.Button(shutdown_frame, text="Shutdown", command=self.shutdown)
-        self.btn_shutdown.grid(row=0, column=0)
+    imu = IMU()
+    motor_left = MotorController(is_left=True)
+    motor_right = MotorController(is_left=False)
 
-        # === Simplified PID Controls ===
-        loop_frame = ttk.LabelFrame(master, text="PID: Tilt Angle → Torque")
-        loop_frame.grid(row=1, column=0, columnspan=2, padx=10, pady=5, sticky="w")
+pid_manager = pidManager()
 
-        pid = self.pid_manager.pid_tilt_angle_to_torque
-        params = {"P": pid.kp, "I": pid.ki, "D": pid.kd}
-        self.pid_vars = {}
+# === Control Loop ===
+LOG_INTERVAL = 0.25
+last_log_time = time.time()
+RUNNING = True
+last_tilt_to_torque_time = 0
 
-        for i, (param, value) in enumerate(params.items()):
-            var = tk.DoubleVar(value=value)
-            self.pid_vars[param] = var
+def control_loop():
+    global last_log_time
+    global last_tilt_to_torque_time
 
-            ttk.Label(loop_frame, text=param).grid(row=0, column=i * 3)
-            ttk.Entry(loop_frame, textvariable=var, width=8).grid(row=0, column=i * 3 + 1)
-            def make_pid_update_callback(p, v):
-                return lambda: setattr(pid, p.lower(), v.get())
+    start_time = time.time()
+    target_torque = 0.0  # ensure it's initialized
 
-            ttk.Button(loop_frame, text="Update", command=make_pid_update_callback(param, var)).grid(...)
+    motor_left.start()
+    motor_right.start()
 
+    while RUNNING:
+        current_time = time.time()
 
-        # === Y Angle Offset ===
-        y_angle_frame = ttk.LabelFrame(master, text="Y Angle Offset")
-        y_angle_frame.grid(row=5, column=0, columnspan=2, padx=10, pady=5, sticky="w")
+        # === Sensor readings ===
+        estimated_tilt_angle = -imu.read_pitch()
 
-        self.y_offset_var = tk.DoubleVar(value=self.pid_manager.angle_y_offset)
-        ttk.Label(y_angle_frame, text="Offset").grid(row=0, column=0)
-        ttk.Entry(y_angle_frame, textvariable=self.y_offset_var, width=8).grid(row=0, column=1)
-        ttk.Button(y_angle_frame, text="Update", command=self.update_y_offset).grid(row=0, column=2)
+        # === Safety check ===
+        if current_time - start_time > global_config.angle_limit_time_delay and abs(estimated_tilt_angle) > global_config.angle_limit:
+            global_log_manager.log_critical(
+                f"Angle exceeded safe limit: {estimated_tilt_angle:.2f}. Stopping motors.", location="safety"
+            )
+            motor_left.stop()
+            motor_right.stop()
+            break
 
-        # === Dashboard ===
-        dashboard_frame = ttk.LabelFrame(master, text="Value Dashboard")
-        dashboard_frame.grid(row=6, column=0, columnspan=2, padx=10, pady=10, sticky="ew")
+        # === Control loops ===
+        target_angle = global_config.angle_neutral
+        pid_manager.pid_tilt_angle_to_torque.target_angle = target_angle
+        target_torque = pid_manager.pid_tilt_angle_to_torque.update(estimated_tilt_angle)
 
-        self.dashboard_vars = {}
-        metrics = ["Tilt Angle", "Torque"]
+        # === Motor Commands ===
+        motor_left.set_speed(target_torque)
+        motor_right.set_speed(target_torque)
 
-        for i, metric in enumerate(metrics):
-            ttk.Label(dashboard_frame, text=metric).grid(row=i, column=0, sticky="w")
-            self.dashboard_vars[metric] = {
-                "target": tk.StringVar(value="0.0"),
-                "measured": tk.StringVar(value="0.0"),
-                "diff": tk.StringVar(value="0.0")
-            }
-            ttk.Label(dashboard_frame, text="Target").grid(row=i, column=1)
-            ttk.Entry(dashboard_frame, textvariable=self.dashboard_vars[metric]["target"], width=10, state="readonly").grid(row=i, column=2)
+        # === Logging ===
+        if current_time - last_log_time >= LOG_INTERVAL:
+            global_log_manager.log_debug(
+                f"set={pid_manager.pid_tilt_angle_to_torque.target_angle:.2f}  "
+                f"est={estimated_tilt_angle:.2f}  "
+                f"tgtT={target_torque:.2f}  ",
+                location="loop"
+            )
+            last_log_time = current_time
 
-            ttk.Label(dashboard_frame, text="Measured").grid(row=i, column=3)
-            ttk.Entry(dashboard_frame, textvariable=self.dashboard_vars[metric]["measured"], width=10, state="readonly").grid(row=i, column=4)
+        time.sleep(global_config.main_loop_interval)
 
-            ttk.Label(dashboard_frame, text="Diff").grid(row=i, column=5)
-            ttk.Entry(dashboard_frame, textvariable=self.dashboard_vars[metric]["diff"], width=10, state="readonly").grid(row=i, column=6)
+    motor_left.stop()
+    motor_right.stop()
+    global_log_manager.log_info("Control loop exited", location="main")
 
-    # === Shutdown Command ===
-    def shutdown(self):
-        print("Shutdown command issued")  # Replace with actual shutdown logic if needed
+# === Shutdown Handler ===
+def shutdown():
+    global RUNNING
+    RUNNING = False
+    global_log_manager.log_warning("Shutdown initiated by KeyboardInterrupt", location="main")
 
-    # === Angle Offset Update ===
-    def update_y_offset(self):
-        value = self.y_offset_var.get()
-        self.pid_manager.angle_y_offset = value
-        print(f"Y Angle Offset updated to {value}")
+# === Start Everything ===
+if __name__ == "__main__":
+    try:
+        global_log_manager.log_info("Starting motors", location="main")
 
-    # === Dashboard Update ===
-    def update_dashboard_value(self, category, target, measured):
-        if category in self.dashboard_vars:
-            self.dashboard_vars[category]["target"].set(f"{target:.2f}")
-            self.dashboard_vars[category]["measured"].set(f"{measured:.2f}")
-            diff = measured - target
-            self.dashboard_vars[category]["diff"].set(f"{diff:.2f}")
+        loop_thread = threading.Thread(target=control_loop, daemon=True)
+        loop_thread.start()
+
+        while loop_thread.is_alive():
+            time.sleep(0.1)
+
+    except KeyboardInterrupt:
+        shutdown()
+
+    loop_thread.join()
+    global_log_manager.log_info("Shutdown complete", location="main")
