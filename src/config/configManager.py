@@ -38,6 +38,8 @@ class ConfigManager:
         self.angle_limit_time_delay = 1.0
         self.print_to_console = True
         self.debug_mode = True
+        
+        global_config.angle_move = 5
 
 
 # Create a single ConfigManager instance
