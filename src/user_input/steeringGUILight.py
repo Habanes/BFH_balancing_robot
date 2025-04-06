@@ -34,7 +34,11 @@ class SteeringGUI:
 
             ttk.Label(loop_frame, text=param).grid(row=0, column=i * 3)
             ttk.Entry(loop_frame, textvariable=var, width=8).grid(row=0, column=i * 3 + 1)
-            ttk.Button(loop_frame, text="Update", command=lambda p=param, v=var: setattr(pid, p.lower(), v.get())).grid(row=0, column=i * 3 + 2)
+            def make_pid_update_callback(p, v):
+                return lambda: setattr(pid, p.lower(), v.get())
+
+            ttk.Button(loop_frame, text="Update", command=make_pid_update_callback(param, var)).grid(...)
+
 
         # === Y Angle Offset ===
         y_angle_frame = ttk.LabelFrame(master, text="Y Angle Offset")
