@@ -71,7 +71,7 @@ class RobotGui:
             from_=15,
             to=-15,
             orient=tk.VERTICAL,
-            resolution=3,
+            resolution=0.1,
             command=self.update_control_angle
         )
         self.joystick.set(0)
