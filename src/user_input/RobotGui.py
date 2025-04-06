@@ -63,12 +63,20 @@ class RobotGui:
         self.offset_entry.grid(row=7, column=1)
 
         tk.Button(self.root, text="Set Dynamic Offset", command=self.set_dynamic_offset).grid(row=7, column=2)
-
+        
     def build_joystick(self):
         tk.Label(self.root, text="Joystick (Y-axis)").grid(row=11, column=0)
-        self.joystick = tk.Scale(self.root, from_=20, to=-20, orient=tk.VERTICAL, command=self.update_control_angle)
+        self.joystick = tk.Scale(
+            self.root,
+            from_=15,
+            to=-15,
+            orient=tk.VERTICAL,
+            resolution=3,
+            command=self.update_control_angle
+        )
         self.joystick.set(0)
         self.joystick.grid(row=12, column=0, rowspan=3)
+
 
     def update_control_angle(self, value):
         try:
