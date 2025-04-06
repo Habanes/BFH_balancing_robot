@@ -9,9 +9,10 @@ from imu import IMU  # Your hardware interface
 import smbus2 as smbus
 
 # === CONFIG ===
-PLOT_DURATION = 20  # seconds
+PLOT_DURATION = 10  # seconds
 PLOT_INTERVAL = 0.01  # seconds (100 Hz)
-ANGLE_RANGE = (-45, 45)
+ANGLE_RANGE = (-10, 10)
+START_ANGLE_THRESHOLD = 8.0  # degrees
 
 class InertiaGUI:
     def __init__(self, root):
@@ -23,6 +24,7 @@ class InertiaGUI:
         self.angle_offset = 0.0
 
         self.running = False
+        self.waiting_for_stable_start = False
         self.setup_widgets()
         self.reset_data()
         self.update_labels_loop()
@@ -83,6 +85,12 @@ class InertiaGUI:
         self.time_label.config(text=f"Time: {current_time:.2f} s")
         self.angle_label.config(text=f"Angle: {pitch:.2f} °")
 
+        if self.waiting_for_stable_start:
+            if abs(pitch) <= START_ANGLE_THRESHOLD:
+                self.waiting_for_stable_start = False
+                self.running = True
+                self.start_time = time.time()
+
         if self.running:
             self.times.append(current_time)
             self.angles.append(pitch)
@@ -100,16 +108,17 @@ class InertiaGUI:
         self.canvas.draw()
 
     def start_recording(self):
-        if not self.running:
-            self.running = True
-            if not self.start_time:
-                self.start_time = time.time()
+        if not self.running and not self.waiting_for_stable_start:
+            self.waiting_for_stable_start = True
+            self.start_time = None  # Will be set once condition is met
 
     def stop_recording(self):
         self.running = False
+        self.waiting_for_stable_start = False
 
     def reset(self):
         self.running = False
+        self.waiting_for_stable_start = False
         self.reset_data()
         self.line.set_data([], [])
         self.canvas.draw()
