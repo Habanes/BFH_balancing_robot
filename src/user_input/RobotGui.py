@@ -19,6 +19,7 @@ class RobotGui:
         self.build_status_labels()
         self.build_control_buttons()
         self.build_offset_input()
+        self.build_joystick()
         self.bind_keys()
         self.refresh_values()
 
@@ -62,6 +63,19 @@ class RobotGui:
         self.offset_entry.grid(row=7, column=1)
 
         tk.Button(self.root, text="Set Dynamic Offset", command=self.set_dynamic_offset).grid(row=7, column=2)
+
+    def build_joystick(self):
+        tk.Label(self.root, text="Joystick (Y-axis)").grid(row=11, column=0)
+        self.joystick = tk.Scale(self.root, from_=10, to=-10, orient=tk.VERTICAL, command=self.update_control_angle)
+        self.joystick.set(0)
+        self.joystick.grid(row=12, column=0, rowspan=3)
+
+    def update_control_angle(self, value):
+        try:
+            val = float(value)
+            self.pid_manager.setTargetAngle(val)
+        except ValueError:
+            print("Invalid joystick input.")
 
     def set_dynamic_offset(self):
         try:
