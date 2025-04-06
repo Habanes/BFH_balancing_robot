@@ -6,28 +6,13 @@ from src.pid.PIDVelocityToTiltAngle import PIDVelocityToTiltAngle
 
 class pidManager:
     def __init__(self):
-        self.pid_angular_velocity_to_torque_differential = PIDAngularVelocityToTorqueDifferential(1.0, 1.0, 1.0)
-        self.pid_estimated_torque_to_torque = PIDEstimatedTorqueToTorque(1.0, 1.0, 1.0)
-        self.pid_tilt_angle_to_torque = PIDTiltAngleToTorque(0.03, 0.2, 0.001)
-        self.pid_velocity_to_tilt_angle = PIDVelocityToTiltAngle(1.0, 1.0, 1.0)
-
-        self._angle_y_offset = 0.0
-        self.adjusted_neutral_angle_y = global_config.angle_neutral  # optional use
-
-    # === Angle Offset Management ===
-    @property
-    def angle_y_offset(self):
-        return self._angle_y_offset
-
-    @angle_y_offset.setter
-    def angle_y_offset(self, value: float):
-        self._angle_y_offset = value
-        self.adjusted_neutral_angle_y = global_config.angle_neutral + value
+        self.pid_tilt_angle_to_torque = PIDTiltAngleToTorque(0.03, 0.2, 0.001, global_config.angle_neutral)
 
     # === Preset Movement Commands ===
     
     def set_dynamic_target_angle_offset(self,value):
         self.dynamic_target_angle_offset = value
+        self.pid_tilt_angle_to_torque.target_angle = self.pid_tilt_angle_to_torque.target_angle + self.dynamic_target_angle_offset
         print(f"dynamic angle target offset: {self.dynamic_target_angle_offset}")
     
     def stop(self):

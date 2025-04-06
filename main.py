@@ -45,7 +45,6 @@ def control_loop():
 
     start_time = time.time()
     target_torque = 0.0  # ensure it's initialized
-    dynamic_target_angle_offset = 0
 
     motor_left.start()
     motor_right.start()
@@ -66,8 +65,6 @@ def control_loop():
             break
 
         # === Control loops ===
-        target_angle = global_config.angle_neutral
-        pid_manager.pid_tilt_angle_to_torque.target_angle = target_angle + dynamic_target_angle_offset
         target_torque = pid_manager.pid_tilt_angle_to_torque.update(estimated_tilt_angle)
 
         # === Motor Commands ===
