@@ -20,10 +20,11 @@ class InertiaGUI:
 
         self.bus = smbus.SMBus(1)
         self.imu = IMU(self.bus)
+        self.angle_offset = 0.0
 
         self.running = False
-        self.setup_widgets()     # Moved up
-        self.reset_data()        # Moved down
+        self.setup_widgets()
+        self.reset_data()
         self.update_labels_loop()
 
     def reset_data(self):
@@ -72,8 +73,11 @@ class InertiaGUI:
         self.calc_period_btn = ttk.Button(btn_frame, text="Calc Period", command=self.calculate_period)
         self.calc_period_btn.pack(side="left", padx=5)
 
+        self.reset_zero_btn = ttk.Button(btn_frame, text="Reset 0 Point", command=self.set_zero_offset)
+        self.reset_zero_btn.pack(side="left", padx=5)
+
     def update_labels_loop(self):
-        pitch = self.imu.read_pitch()
+        pitch = self.imu.read_pitch() - self.angle_offset
         current_time = time.time() - self.start_time if self.start_time else 0
 
         self.time_label.config(text=f"Time: {current_time:.2f} s")
@@ -133,6 +137,9 @@ class InertiaGUI:
         avg_period = sum(periods) / len(periods)
 
         self.period_var.set(f"Estimated Period: {avg_period:.3f} s")
+
+    def set_zero_offset(self):
+        self.angle_offset = self.imu.read_pitch()
 
 if __name__ == "__main__":
     root = tk.Tk()
