@@ -10,10 +10,10 @@ class ConfigManager:
 
 
         # === Control loop update rates (Hz) ===
-        self.velocity_to_tilt_angle_rate = 50             # velocity → desired tilt angle
-        self.tilt_angle_to_torque_rate = 100              # measured tilt angle → torque
-        self.estimated_torque_to_actual_torque_rate = 500 # estimated torque → corrected torque
-        self.angular_velocity_to_torque_diff_rate = 100   # yaw rate → torque differential
+        self.velocity_to_tilt_angle_rate = 1000             # velocity → desired tilt angle
+        self.tilt_angle_to_torque_rate = 5000               # measured tilt angle → torque
+        self.estimated_torque_to_actual_torque_rate = 10000 # estimated torque → corrected torque
+        self.angular_velocity_to_torque_diff_rate = 1000    # yaw rate → torque differential
 
         # === Control loop intervals (s) ===
         self.velocity_to_tilt_angle_interval = 1 / self.velocity_to_tilt_angle_rate
@@ -22,7 +22,7 @@ class ConfigManager:
         self.angular_velocity_to_torque_diff_interval = 1 / self.angular_velocity_to_torque_diff_rate
 
         # === Main loop tick rate (can be used as base loop) ===
-        self.main_loop_rate = 1000
+        # self.main_loop_rate = 1000
         # self.main_loop_interval = 1 / self.main_loop_rate
         self.main_loop_interval = 0
 
