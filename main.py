@@ -33,6 +33,8 @@ else:
 
 pid_manager = pidManager()
 
+wait_until_correct_angle = True
+
 # === Control Loop ===
 LOG_INTERVAL = 0.25
 last_log_time = time.time()
@@ -42,10 +44,13 @@ last_tilt_to_torque_time = 0
 def control_loop():
     global last_log_time, last_tilt_to_torque_time
     global latest_angle, latest_torque
+    global wait_until_correct_angle
 
     start_time = time.time()
     target_torque = 0.0  # ensure it's initialized
 
+    motor_left.start()
+    motor_right.start()
 
     while RUNNING:
         current_time = time.time()
@@ -60,6 +65,12 @@ def control_loop():
             )
             motor_left.stop()
             motor_right.stop()
+            wait_until_correct_angle = True
+
+        if current_time - start_time > global_config.angle_limit_time_delay and abs(estimated_tilt_angle) < global_config.angle_limit and wait_until_correct_angle:
+            motor_left.start()
+            motor_right.start()
+            wait_until_correct_angle = False
 
         # === Control loops ===
         target_torque = pid_manager.pid_tilt_angle_to_torque.update(estimated_tilt_angle)
