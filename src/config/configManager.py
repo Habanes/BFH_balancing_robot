@@ -7,6 +7,8 @@ class ConfigManager:
         self.enable_velocity_loop = False
         self.enable_yaw_loop = False
         self.enable_torque_feedback_loop = False
+        
+        self.only_angle_loop = not(self.enable_velocity_loop or self.enable_yaw_loop or self.enable_torque_feedback_loop)
 
 
         # === Control loop update rates (Hz) ===

@@ -85,42 +85,17 @@ def control_loop():
             break
 
         # === Control loops ===
-
-        # Loop 1: Velocity → Tilt Angle
-        if current_time - last_velocity_to_tilt_time >= global_config.velocity_to_tilt_angle_interval:
-            if global_config.enable_velocity_loop:
-                target_tilt_angle = pid_manager.pid_velocity_to_tilt_angle.update(measured_velocity)
-                pid_manager.pid_tilt_angle_to_torque.target_angle = target_tilt_angle
-            else:
-                pid_manager.pid_tilt_angle_to_torque.target_angle = pid_manager.adjusted_neutral_angle_y
-            last_velocity_to_tilt_time = current_time
-
-        # Loop 2: Tilt Angle → Torque (always active)
-        if current_time - last_tilt_to_torque_time >= global_config.tilt_angle_to_torque_interval:
-            target_torque = pid_manager.pid_tilt_angle_to_torque.update(estimated_tilt_angle)
-            pid_manager.pid_estimated_torque_to_torque.target_torque = target_torque
-            last_tilt_to_torque_time = current_time
-
-        # Loop 3: Estimated Torque → Applied Torque
-        if current_time - last_estimated_torque_time >= global_config.estimated_torque_to_actual_torque_interval:
-            estimated_applied_torque = measured_current
-            if global_config.enable_torque_feedback_loop:
-                actual_torque_output = pid_manager.pid_estimated_torque_to_torque.update(estimated_applied_torque)
-            else:
-                actual_torque_output = pid_manager.pid_estimated_torque_to_torque.target_torque
-            last_estimated_torque_time = current_time
-
-        # Loop 4: Angular Velocity → Torque Differential
-        if current_time - last_yaw_control_time >= global_config.angular_velocity_to_torque_diff_interval:
-            if global_config.enable_yaw_loop:
-                torque_diff = pid_manager.pid_angular_velocity_to_torque_differential.update(z_angular_velocity)
-            else:
-                torque_diff = 0.0
-            last_yaw_control_time = current_time
-
-        # === Motor Commands ===
-        motor_left.set_speed(actual_torque_output - torque_diff)
-        motor_right.set_speed(actual_torque_output + torque_diff)
+        
+        if global_config.only_angle_loop:
+            # Loop: Tilt Angle → Torque (always active)
+            if current_time - last_tilt_to_torque_time >= global_config.tilt_angle_to_torque_interval:
+                target_angle = global_config.angle_neutral
+                target_torque = pid_manager.pid_estimated_torque_to_torque.update(estimated_tilt_angle - target_angle)
+                last_tilt_to_torque_time = current_time
+                
+             # === Motor Commands ===
+            motor_left.set_speed(target_torque)
+            motor_right.set_speed(target_torque)
 
         # === Dashboard Update ===
         if gui is not None:
