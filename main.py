@@ -10,6 +10,9 @@ from src.log.logManager import global_log_manager
 latest_angle = 0.0
 latest_torque = 0.0
 
+def get_latest_state():
+    return latest_angle, latest_torque
+
 # === Initialization ===
 global_log_manager.log_info("Initializing components", location="main")
 
@@ -96,7 +99,6 @@ def shutdown():
     RUNNING = False
     global_log_manager.log_warning("Shutdown initiated by KeyboardInterrupt", location="main")
 
-# === Start Everything ===
 if __name__ == "__main__":
     try:
         global_log_manager.log_info("Starting motors", location="main")
@@ -106,12 +108,17 @@ if __name__ == "__main__":
 
         from src.user_input.RobotGui import RobotGui
         root = tk.Tk()
-        # Pass the actual pid_manager instance to RobotGui
-        gui = RobotGui(root, pid_manager)
+        gui = RobotGui(root, pid_manager, get_latest_state)
         root.mainloop()
 
     except KeyboardInterrupt:
         shutdown()
 
-    loop_thread.join()
-    global_log_manager.log_info("Shutdown complete", location="main")
+    finally:
+        # Always stop motors and join thread safely
+        global_log_manager.log_info("Final cleanup: stopping motors", location="main")
+        RUNNING = False
+        motor_left.stop()
+        motor_right.stop()
+        loop_thread.join()
+        global_log_manager.log_info("Shutdown complete", location="main")
