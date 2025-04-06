@@ -12,7 +12,7 @@ import smbus2 as smbus
 PLOT_DURATION = 10  # seconds
 PLOT_INTERVAL = 0.01  # seconds (100 Hz)
 ANGLE_RANGE = (-10, 10)
-START_ANGLE_THRESHOLD = 8.0  # degrees
+START_ANGLE_THRESHOLD = 8.0  # degreess
 
 class InertiaGUI:
     def __init__(self, root):
