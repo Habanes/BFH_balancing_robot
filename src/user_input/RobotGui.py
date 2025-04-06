@@ -15,6 +15,8 @@ class RobotGui:
 
         self.build_pid_controls()
         self.build_status_labels()
+        self.build_control_buttons()
+        self.bind_keys()
         self.refresh_values()
 
     def build_pid_controls(self):
@@ -39,6 +41,21 @@ class RobotGui:
         for j, (label, var) in enumerate(labels, start=4):
             tk.Label(self.root, text=label).grid(row=j, column=0)
             tk.Label(self.root, textvariable=var).grid(row=j, column=1)
+
+    def build_control_buttons(self):
+        button_config = [
+            ("Stop (SPACE)", self.pid_manager.stop),
+            ("Go Forward (W)", self.pid_manager.goForward),
+            ("Go Backward (S)", self.pid_manager.goBackward),
+        ]
+
+        for i, (label, command) in enumerate(button_config, start=7):
+            tk.Button(self.root, text=label, command=command).grid(row=i, column=0, columnspan=3, sticky="we", pady=2)
+
+    def bind_keys(self):
+        self.root.bind("<w>", lambda event: self.pid_manager.goForward())
+        self.root.bind("<s>", lambda event: self.pid_manager.goBackward())
+        self.root.bind("<space>", lambda event: self.pid_manager.stop())
 
     def update_pid_value(self, param):
         try:

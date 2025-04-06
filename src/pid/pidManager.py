@@ -26,21 +26,10 @@ class pidManager:
 
     # === Preset Movement Commands ===
     def stop(self):
-        self.pid_angular_velocity_to_torque_differential.target_torque = 0.0
-        self.pid_velocity_to_tilt_angle.target_velocity = 0.0
+        self.pid_tilt_angle_to_torque.target_angle = 0.0
 
     def goForward(self):
-        self.pid_angular_velocity_to_torque_differential.target_torque = 0.0
-        self.pid_velocity_to_tilt_angle.target_velocity = global_config.base_velocity
+        self.pid_tilt_angle_to_torque.target_angle = 1.0
 
     def goBackward(self):
-        self.pid_angular_velocity_to_torque_differential.target_torque = 0.0
-        self.pid_velocity_to_tilt_angle.target_velocity = -global_config.base_velocity
-
-    def rotateRight(self):
-        self.pid_angular_velocity_to_torque_differential.target_torque = global_config.angle_rotation
-        self.pid_velocity_to_tilt_angle.target_velocity = 0.0
-
-    def rotateLeft(self):
-        self.pid_angular_velocity_to_torque_differential.target_torque = -global_config.angle_rotation
-        self.pid_velocity_to_tilt_angle.target_velocity = 0.0
+        self.pid_tilt_angle_to_torque.target_angle = - 1.0
