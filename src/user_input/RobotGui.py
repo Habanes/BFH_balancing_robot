@@ -1,8 +1,9 @@
 import tkinter as tk
 from src.config.configManager import global_config
+from src.pid.pidManager import pidManager
 
 class RobotGui:
-    def __init__(self, root, pid_manager, get_state_callback):
+    def __init__(self, root, pid_manager: pidManager, get_state_callback):
         self.root = root
         self.root.title("PID Controller GUI")
 
@@ -132,7 +133,7 @@ class RobotGui:
     def update_control_velocity(self, value):
         try:
             val = float(value)
-            self.pid_manager.setTargetAngle(val)
+            self.pid_manager.base_target_velocity(value)
         except ValueError:
             print("Invalid joystick input.")
 
