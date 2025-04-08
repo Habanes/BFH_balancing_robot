@@ -56,7 +56,7 @@ def entire_control_loop():
     motor_encoder_right = MotorEncoder(is_left=False)
 
     velocity_loop_counter = 0
-    VELOCITY_LOOP_DIVIDER = 50  # Run outer loop every 200 inner loops
+    VELOCITY_LOOP_DIVIDER = 50  # Run outer loop every 50 inner loops
 
     motor_left.start()
     motor_right.start()
@@ -85,22 +85,19 @@ def entire_control_loop():
         velocity_loop_counter = (velocity_loop_counter + 1) % VELOCITY_LOOP_DIVIDER
         print(f"VELOCITY LOOP COUNTER: {velocity_loop_counter}")
         if velocity_loop_counter == 0:
-            
             # === Update velocity estimates every time (optional but cleaner tracking) ===
             motor_encoder_left.update()
             motor_encoder_right.update()
-            
+
             avg_velocity = (motor_encoder_left.get_velocity() + motor_encoder_right.get_velocity()) / 2.0
             target_tilt_angle = pid_manager.pid_velocity_to_tilt_angle.update(avg_velocity)
-            
+
             if not global_config.only_inner_loop:
                 pid_manager.pid_tilt_angle_to_torque.target_angle = target_tilt_angle
 
             # Update velocity variables
             latest_velocity = avg_velocity
             latest_target_velocity = pid_manager.pid_velocity_to_tilt_angle.target_velocity
-
-        velocity_loop_counter = (velocity_loop_counter + 1) % VELOCITY_LOOP_DIVIDER
 
         # === Inner tilt-angle-to-torque loop ===
         target_torque = pid_manager.pid_tilt_angle_to_torque.update(estimated_tilt_angle)
@@ -120,8 +117,8 @@ def entire_control_loop():
                 f"est={estimated_tilt_angle:.2f}  "
                 f"tgtT={target_torque:.2f}  "
                 f"vel={latest_velocity}  "
-                f"vel={motor_encoder_right.get_steps()}  "
-                f"vel={motor_encoder_left.get_steps()}  ",
+                f"stepsR={motor_encoder_right.get_steps()}  "
+                f"stepsL={motor_encoder_left.get_steps()}  ",
                 location="loop"
             )
             last_log_time = current_time
@@ -141,7 +138,6 @@ if __name__ == "__main__":
         global_log_manager.log_info("Starting motors", location="main")
 
         loop_thread = threading.Thread(target=entire_control_loop, daemon=True)
-
         loop_thread.start()
 
         from src.user_input.RobotGui import RobotGui
