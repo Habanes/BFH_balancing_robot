@@ -110,19 +110,6 @@ def entire_control_loop():
         latest_angle = estimated_tilt_angle
         latest_torque = target_torque
 
-    """        # === Logging ===
-            if current_time - last_log_time >= LOG_INTERVAL:
-                global_log_manager.log_debug(
-                    f"set={pid_manager.pid_tilt_angle_to_torque.target_angle:.2f}  "
-                    f"est={estimated_tilt_angle:.2f}  "
-                    f"tgtT={target_torque:.2f}  "
-                    f"vel={latest_velocity}  "
-                    f"stepsR={motor_encoder_right.get_steps()}  "
-                    f"stepsL={motor_encoder_left.get_steps()}  ",
-                    location="loop"
-                )
-                last_log_time = current_time"""
-
     motor_left.stop()
     motor_right.stop()
     global_log_manager.log_info("Control loop exited", location="main")
