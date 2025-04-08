@@ -163,7 +163,7 @@ class RobotGui:
             print(f"Invalid input for velocity PID {param}")
 
     def refresh_values(self):
-        current_angle, torque = self.get_state()
+        current_angle, torque, current_velocity, target_velocity = self.get_state()
         target_angle = self.pid_manager.pid_tilt_angle_to_torque.target_angle
         error = target_angle - current_angle
 
@@ -173,10 +173,7 @@ class RobotGui:
         self.torque_var.set(f"{torque:.2f}")
 
         if not global_config.only_inner_loop:
-            current_velocity = self.pid_manager.current_velocity
-            target_velocity = self.pid_manager.pid_velocity_to_tilt_angle.target_velocity
             vel_error = target_velocity - current_velocity
-
             self.vel_var.set(f"{current_velocity:.2f}")
             self.tgtvel_var.set(f"{target_velocity:.2f}")
             self.velerror_var.set(f"{vel_error:.2f}")

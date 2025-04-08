@@ -9,9 +9,11 @@ from src.log.logManager import global_log_manager
 # === Shared Variables for GUI ===
 latest_angle = 0.0
 latest_torque = 0.0
+latest_velocity = 0.0
+latest_target_velocity = 0.0
 
 def get_latest_state():
-    return latest_angle, latest_torque
+    return latest_angle, latest_torque, latest_velocity, latest_target_velocity
 
 # === Initialization ===
 global_log_manager.log_info("Initializing components", location="main")
@@ -99,16 +101,16 @@ def only_angle_control_loop():
     motor_left.stop()
     motor_right.stop()
     global_log_manager.log_info("Control loop exited", location="main")
-    
-    
+
+
 def entire_control_loop():
     global last_log_time, last_tilt_to_torque_time
-    global latest_angle, latest_torque
+    global latest_angle, latest_torque, latest_velocity, latest_target_velocity
     global wait_until_correct_angle
 
     start_time = time.time()
     target_torque = 0.0  # ensure it's initialized
-    
+
     motor_encoder_left = MotorEncoder(is_left=True)
     motor_encoder_right = MotorEncoder(is_left=False)
 
@@ -148,6 +150,10 @@ def entire_control_loop():
             target_tilt_angle = pid_manager.pid_velocity_to_tilt_angle.update(avg_velocity)
             pid_manager.pid_tilt_angle_to_torque.target_angle = target_tilt_angle
 
+            # Update velocity variables
+            latest_velocity = avg_velocity
+            latest_target_velocity = pid_manager.pid_velocity_to_tilt_angle.target_value
+
         velocity_loop_counter = (velocity_loop_counter + 1) % VELOCITY_LOOP_DIVIDER
 
         # === Inner tilt-angle-to-torque loop ===
@@ -186,13 +192,12 @@ def shutdown():
 if __name__ == "__main__":
     try:
         global_log_manager.log_info("Starting motors", location="main")
-        
+
         if global_config.only_inner_loop:
             loop_thread = threading.Thread(target=only_angle_control_loop, daemon=True)
         else:
             loop_thread = threading.Thread(target=entire_control_loop, daemon=True)
 
-        
         loop_thread.start()
 
         from src.user_input.RobotGui import RobotGui
