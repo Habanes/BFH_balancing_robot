@@ -48,6 +48,8 @@ class MotorEncoder:
 
         self._last_steps = current_steps
         self._last_time = now
+        
+        print(f"VELOCITY FOR MOTOR IS LEFT = {self.invert_direction}: {self.velocity}, raw_velocity: {raw_velocity}, dt: {dt}")
 
     def get_velocity(self) -> float:
         return self.velocity
