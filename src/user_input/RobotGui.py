@@ -149,7 +149,7 @@ class RobotGui:
             tk.Label(self.root, text=f"VEL {param.upper()}").grid(row=i, column=4)
 
             entry = tk.Entry(self.root)
-            entry.insert(0, str(getattr(self.pid_manager.pid_velocity_to_angle, param)))
+            entry.insert(0, str(getattr(self.pid_manager.pid_velocity_to_tilt_angle, param)))
             entry.grid(row=i, column=5)
             self.entries[f"vel_{param}"] = entry
 
@@ -159,7 +159,7 @@ class RobotGui:
     def update_pid_value_velocity(self, param):
         try:
             val = float(self.entries[f"vel_{param}"].get())
-            setattr(self.pid_manager.pid_velocity_to_angle, param, val)
+            setattr(self.pid_manager.pid_velocity_to_tilt_angle, param, val)
         except ValueError:
             print(f"Invalid input for velocity PID {param}")
 
