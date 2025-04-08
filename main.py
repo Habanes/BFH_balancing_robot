@@ -83,8 +83,9 @@ def entire_control_loop():
 
         # === Outer velocity loop (runs slower) ===
         velocity_loop_counter = (velocity_loop_counter + 1) % VELOCITY_LOOP_DIVIDER
-        print(f"VELOCITY LOOP COUNTER: {velocity_loop_counter}")
         if velocity_loop_counter == 0:
+            print(f"VELOCITY LOOP COUNTER ENTERED")
+            
             # === Update velocity estimates every time (optional but cleaner tracking) ===
             motor_encoder_left.update()
             motor_encoder_right.update()
