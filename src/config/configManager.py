@@ -4,7 +4,7 @@ class ConfigManager:
         
         self.test_mode = False
         
-        self.only_inner_loop = False
+        self.only_inner_loop = True
     
         # === Control loop update rates (Hz) ===
         self.velocity_to_tilt_angle_rate = 1000             # velocity → desired tilt angle

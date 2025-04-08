@@ -14,6 +14,9 @@ class RobotGui:
         self.tgtangle_var = tk.StringVar()
         self.error_var = tk.StringVar()
         self.torque_var = tk.StringVar()
+        self.vel_var = tk.StringVar()
+        self.tgtvel_var = tk.StringVar()
+        self.velerror_var = tk.StringVar()
         self.offset_entry = None
 
         self.build_pid_controls_angle()
@@ -41,6 +44,19 @@ class RobotGui:
             btn = tk.Button(self.root, text="Update", command=lambda p=param: self.update_pid_value_angle(p))
             btn.grid(row=i, column=2)
 
+    def build_pid_controls_velocity(self):
+        base_row = 0
+        for i, param in enumerate(["kp", "ki", "kd"]):
+            tk.Label(self.root, text=f"VEL {param.upper()}").grid(row=i, column=4)
+
+            entry = tk.Entry(self.root)
+            entry.insert(0, str(getattr(self.pid_manager.pid_velocity_to_tilt_angle, param)))
+            entry.grid(row=i, column=5)
+            self.entries[f"vel_{param}"] = entry
+
+            btn = tk.Button(self.root, text="Update", command=lambda p=param: self.update_pid_value_velocity(p))
+            btn.grid(row=i, column=6)
+
     def build_status_labels(self):
         labels = [
             ("Current Angle", self.angle_var),
@@ -49,9 +65,19 @@ class RobotGui:
             ("Torque",       self.torque_var),
         ]
 
+        velocity_labels = [
+            ("Current Velocity", self.vel_var),
+            ("Target Velocity", self.tgtvel_var),
+            ("Velocity Error",  self.velerror_var),
+        ]
+
         for j, (label, var) in enumerate(labels, start=4):
             tk.Label(self.root, text=label).grid(row=j, column=0)
             tk.Label(self.root, textvariable=var).grid(row=j, column=1)
+
+        for j, (label, var) in enumerate(velocity_labels, start=4):
+            tk.Label(self.root, text=label).grid(row=j, column=4)
+            tk.Label(self.root, textvariable=var).grid(row=j, column=5)
 
     def build_control_buttons(self):
         button_config = [
@@ -69,7 +95,7 @@ class RobotGui:
         self.offset_entry.grid(row=7, column=1)
 
         tk.Button(self.root, text="Set Dynamic Offset", command=self.set_dynamic_offset).grid(row=7, column=2)
-        
+
     def build_joystick_angle(self):
         tk.Label(self.root, text="Joystick (Y-axis)").grid(row=11, column=0)
         self.joystick = tk.Scale(
@@ -82,7 +108,7 @@ class RobotGui:
         )
         self.joystick.set(0)
         self.joystick.grid(row=12, column=0, rowspan=3)
-        
+
     def build_joystick_velocity(self):
         tk.Label(self.root, text="Joystick (Y-axis)").grid(row=11, column=0)
         self.joystick = tk.Scale(
@@ -96,21 +122,19 @@ class RobotGui:
         self.joystick.set(0)
         self.joystick.grid(row=12, column=0, rowspan=3)
 
-
     def update_control_angle(self, value):
         try:
             val = float(value)
             self.pid_manager.setTargetAngle(val)
         except ValueError:
             print("Invalid joystick input.")
-            
+
     def update_control_velocity(self, value):
         try:
             val = float(value)
             self.pid_manager.setTargetAngle(val)
         except ValueError:
             print("Invalid joystick input.")
-
 
     def set_dynamic_offset(self):
         try:
@@ -131,6 +155,13 @@ class RobotGui:
         except ValueError:
             print(f"Invalid input for {param}")
 
+    def update_pid_value_velocity(self, param):
+        try:
+            val = float(self.entries[f"vel_{param}"].get())
+            setattr(self.pid_manager.pid_velocity_to_tilt_angle, param, val)
+        except ValueError:
+            print(f"Invalid input for velocity PID {param}")
+
     def refresh_values(self):
         current_angle, torque = self.get_state()
         target_angle = self.pid_manager.pid_tilt_angle_to_torque.target_angle
@@ -141,25 +172,13 @@ class RobotGui:
         self.error_var.set(f"{error:.2f}")
         self.torque_var.set(f"{torque:.2f}")
 
+        if not global_config.only_inner_loop:
+            current_velocity = self.pid_manager.current_velocity
+            target_velocity = self.pid_manager.pid_velocity_to_tilt_angle.target_velocity
+            vel_error = target_velocity - current_velocity
+
+            self.vel_var.set(f"{current_velocity:.2f}")
+            self.tgtvel_var.set(f"{target_velocity:.2f}")
+            self.velerror_var.set(f"{vel_error:.2f}")
+
         self.root.after(100, self.refresh_values)
-        
-    def build_pid_controls_velocity(self):
-        base_row = 0
-        for i, param in enumerate(["kp", "ki", "kd"]):
-            tk.Label(self.root, text=f"VEL {param.upper()}").grid(row=i, column=4)
-
-            entry = tk.Entry(self.root)
-            entry.insert(0, str(getattr(self.pid_manager.pid_velocity_to_tilt_angle, param)))
-            entry.grid(row=i, column=5)
-            self.entries[f"vel_{param}"] = entry
-
-            btn = tk.Button(self.root, text="Update", command=lambda p=param: self.update_pid_value_velocity(p))
-            btn.grid(row=i, column=6)
-
-    def update_pid_value_velocity(self, param):
-        try:
-            val = float(self.entries[f"vel_{param}"].get())
-            setattr(self.pid_manager.pid_velocity_to_tilt_angle, param, val)
-        except ValueError:
-            print(f"Invalid input for velocity PID {param}")
-
