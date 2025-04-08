@@ -19,7 +19,7 @@ class ConfigManager:
         self.angular_velocity_to_torque_diff_interval = 1 / self.angular_velocity_to_torque_diff_rate
 
         # === Main loop tick rate (can be used as base loop) ===
-        self.main_loop_rate = 10000
+        self.main_loop_rate = 1000
         self.main_loop_interval = 1 / self.main_loop_rate
 
         # === Motion and angle settings ===

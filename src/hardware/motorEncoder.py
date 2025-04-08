@@ -18,15 +18,33 @@ class MotorEncoder:
         self._last_time = time.monotonic()
         self.velocity = 0.0  # steps per second
 
+        # Smoothing and limits
+        self._alpha = 0.2  # exponential smoothing factor
+        self._max_step_jump = 1000
+        self._min_dt = 0.001   # 1 ms
+        self._max_dt = 0.5     # 500 ms
+
     def update(self):
         now = time.monotonic()
         dt = now - self._last_time
-        if dt <= 0:
+
+        # Reject unreasonable timing
+        if dt < self._min_dt or dt > self._max_dt:
+            self._last_time = now
             return
 
         current_steps = -self.encoder.steps if self.invert_direction else self.encoder.steps
         delta_steps = current_steps - self._last_steps
-        self.velocity = delta_steps / dt
+
+        # Reject large step jumps
+        if abs(delta_steps) > self._max_step_jump:
+            self._last_time = now
+            return
+
+        raw_velocity = delta_steps / dt
+
+        # Apply exponential smoothing
+        self.velocity = (1 - self._alpha) * self.velocity + self._alpha * raw_velocity
 
         self._last_steps = current_steps
         self._last_time = now

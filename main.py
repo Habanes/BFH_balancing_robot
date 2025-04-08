@@ -56,7 +56,7 @@ def entire_control_loop():
     motor_encoder_right = MotorEncoder(is_left=False)
 
     velocity_loop_counter = 0
-    VELOCITY_LOOP_DIVIDER = 50  # Run outer loop every 50 inner loops
+    VELOCITY_LOOP_DIVIDER = 200  # Run outer loop every 200 inner loops
 
     motor_left.start()
     motor_right.start()
