@@ -115,8 +115,8 @@ def entire_control_loop():
                 f"est={estimated_tilt_angle:.2f}  "
                 f"tgtT={target_torque:.2f}  "
                 f"vel={latest_velocity}  "
-                f"vel={motor_encoder_right.get_steps}  "
-                f"vel={motor_encoder_left.get_steps}  ",
+                f"vel={motor_encoder_right.get_steps()}  "
+                f"vel={motor_encoder_left.get_steps()}  ",
                 location="loop"
             )
             last_log_time = current_time
