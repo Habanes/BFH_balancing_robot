@@ -82,7 +82,7 @@ def entire_control_loop():
             wait_until_correct_angle = False
 
         # === Outer velocity loop (runs slower) ===
-        if velocity_loop_counter == 0 and not global_config.only_inner_loop:
+        if velocity_loop_counter == 0:
             
             # === Update velocity estimates every time (optional but cleaner tracking) ===
             motor_encoder_left.update()
@@ -90,7 +90,9 @@ def entire_control_loop():
             
             avg_velocity = (motor_encoder_left.get_velocity() + motor_encoder_right.get_velocity()) / 2.0
             target_tilt_angle = pid_manager.pid_velocity_to_tilt_angle.update(avg_velocity)
-            pid_manager.pid_tilt_angle_to_torque.target_angle = target_tilt_angle
+            
+            if not global_config.only_inner_loop:
+                pid_manager.pid_tilt_angle_to_torque.target_angle = target_tilt_angle
 
             # Update velocity variables
             latest_velocity = avg_velocity

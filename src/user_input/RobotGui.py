@@ -80,6 +80,7 @@ class RobotGui:
             tk.Label(self.root, text=label).grid(row=j, column=4)
             tk.Label(self.root, textvariable=var).grid(row=j, column=5)
 
+
     def build_control_buttons(self):
         button_config = [
             ("Stop (SPACE)", self.pid_manager.stop),
