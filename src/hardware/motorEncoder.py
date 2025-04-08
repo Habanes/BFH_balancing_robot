@@ -25,13 +25,24 @@ class MotorEncoder:
         current_steps = -self.encoder.steps if self.invert_direction else self.encoder.steps
         delta_steps = current_steps - self._last_steps
 
+        if dt == 0:
+            print(f"[WARNING] dt=0, skipping velocity update.")
+            return
+
         raw_velocity = delta_steps / dt
         self.velocity = raw_velocity
 
-        self._last_steps = current_steps
-        self._last_time = now
+        direction = "LEFT" if self.invert_direction else "RIGHT"
 
-        print(f"VELOCITY FOR MOTOR IS LEFT = {self.invert_direction}: {self.velocity}, dt: {dt}")
+        print(f"[ENCODER {direction}]")
+        print(f"  steps (prev -> now): {self._last_steps} -> {current_steps}")
+        print(f"  delta_steps: {delta_steps}")
+        print(f"  dt: {dt:.6f} s")
+        print(f"  velocity: {self.velocity:.2f} steps/sec")
+        print("")
+
+    self._last_steps = current_steps
+    self._last_time = now
 
     def get_velocity(self) -> float:
         return self.velocity
