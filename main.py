@@ -82,6 +82,7 @@ def entire_control_loop():
             wait_until_correct_angle = False
 
         # === Outer velocity loop (runs slower) ===
+        velocity_loop_counter = (velocity_loop_counter + 1) % VELOCITY_LOOP_DIVIDER
         if velocity_loop_counter == 0:
             
             # === Update velocity estimates every time (optional but cleaner tracking) ===
