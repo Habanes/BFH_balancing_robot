@@ -16,7 +16,9 @@ class RobotGui:
         self.torque_var = tk.StringVar()
         self.offset_entry = None
 
-        self.build_pid_controls()
+        self.build_pid_controls_angle()
+        if not global_config.only_inner_loop:
+            self.build_pid_controls_velocity()
         self.build_status_labels()
         self.build_control_buttons()
         self.build_offset_input()
@@ -27,7 +29,7 @@ class RobotGui:
         self.bind_keys()
         self.refresh_values()
 
-    def build_pid_controls(self):
+    def build_pid_controls_angle(self):
         for i, param in enumerate(["kp", "ki", "kd"]):
             tk.Label(self.root, text=param.upper()).grid(row=i, column=0)
 
@@ -36,7 +38,7 @@ class RobotGui:
             entry.grid(row=i, column=1)
             self.entries[param] = entry
 
-            btn = tk.Button(self.root, text="Update", command=lambda p=param: self.update_pid_value(p))
+            btn = tk.Button(self.root, text="Update", command=lambda p=param: self.update_pid_value_angle(p))
             btn.grid(row=i, column=2)
 
     def build_status_labels(self):
@@ -122,7 +124,7 @@ class RobotGui:
         self.root.bind("<s>", lambda event: self.pid_manager.goBackward())
         self.root.bind("<space>", lambda event: self.pid_manager.stop())
 
-    def update_pid_value(self, param):
+    def update_pid_value_angle(self, param):
         try:
             val = float(self.entries[param].get())
             setattr(self.pid_manager.pid_tilt_angle_to_torque, param, val)
@@ -140,3 +142,24 @@ class RobotGui:
         self.torque_var.set(f"{torque:.2f}")
 
         self.root.after(100, self.refresh_values)
+        
+    def build_pid_controls_velocity(self):
+        base_row = 0
+        for i, param in enumerate(["kp", "ki", "kd"]):
+            tk.Label(self.root, text=f"VEL {param.upper()}").grid(row=i, column=4)
+
+            entry = tk.Entry(self.root)
+            entry.insert(0, str(getattr(self.pid_manager.pid_velocity_to_angle, param)))
+            entry.grid(row=i, column=5)
+            self.entries[f"vel_{param}"] = entry
+
+            btn = tk.Button(self.root, text="Update", command=lambda p=param: self.update_pid_value_velocity(p))
+            btn.grid(row=i, column=6)
+
+    def update_pid_value_velocity(self, param):
+        try:
+            val = float(self.entries[f"vel_{param}"].get())
+            setattr(self.pid_manager.pid_velocity_to_angle, param, val)
+        except ValueError:
+            print(f"Invalid input for velocity PID {param}")
+
