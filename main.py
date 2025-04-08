@@ -152,7 +152,7 @@ def entire_control_loop():
 
             # Update velocity variables
             latest_velocity = avg_velocity
-            latest_target_velocity = pid_manager.pid_velocity_to_tilt_angle.target_value
+            latest_target_velocity = pid_manager.pid_velocity_to_tilt_angle.target_velocity
 
         velocity_loop_counter = (velocity_loop_counter + 1) % VELOCITY_LOOP_DIVIDER
 
