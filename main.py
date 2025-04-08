@@ -50,22 +50,25 @@ def entire_control_loop():
     global wait_until_correct_angle
 
     start_time = time.time()
-    target_torque = 0.0  # ensure it's initialized
+    target_torque = 0.0
 
     motor_encoder_left = MotorEncoder(is_left=True)
     motor_encoder_right = MotorEncoder(is_left=False)
 
     velocity_loop_counter = 0
-    VELOCITY_LOOP_DIVIDER = 50  # Run outer loop every 50 inner loops
+    VELOCITY_LOOP_DIVIDER = 50
 
     motor_left.start()
     motor_right.start()
 
     while RUNNING:
+        loop_start = time.time()
         current_time = time.time()
 
         # === Sensor readings ===
+        t0 = time.time()
         estimated_tilt_angle = -imu.read_pitch()
+        t1 = time.time()
 
         # === Safety check ===
         if current_time - start_time > global_config.angle_limit_time_delay and abs(estimated_tilt_angle) > global_config.angle_limit:
@@ -80,12 +83,11 @@ def entire_control_loop():
             motor_left.start()
             motor_right.start()
             wait_until_correct_angle = False
+        t2 = time.time()
 
         # === Outer velocity loop (runs slower) ===
         velocity_loop_counter = (velocity_loop_counter + 1) % VELOCITY_LOOP_DIVIDER
         if velocity_loop_counter == 0:
-            
-            # === Update velocity estimates every time (optional but cleaner tracking) ===
             motor_encoder_left.update()
             motor_encoder_right.update()
 
@@ -95,20 +97,39 @@ def entire_control_loop():
             if not global_config.only_inner_loop:
                 pid_manager.pid_tilt_angle_to_torque.target_angle = target_tilt_angle
 
-            # Update velocity variables
             latest_velocity = avg_velocity
             latest_target_velocity = pid_manager.pid_velocity_to_tilt_angle.target_velocity
+        t3 = time.time()
 
         # === Inner tilt-angle-to-torque loop ===
         target_torque = pid_manager.pid_tilt_angle_to_torque.update(estimated_tilt_angle)
+        t4 = time.time()
 
         # === Motor Commands ===
         motor_left.set_speed(target_torque)
         motor_right.set_speed(target_torque)
+        t5 = time.time()
 
         # === Update shared values for GUI ===
         latest_angle = estimated_tilt_angle
         latest_torque = target_torque
+        t6 = time.time()
+
+        # === Log timings ===
+        total = t6 - loop_start
+        steps = {
+            "Read pitch": t1 - t0,
+            "Safety checks": t2 - t1,
+            "Velocity loop": t3 - t2,
+            "Torque PID": t4 - t3,
+            "Motor speed set": t5 - t4,
+            "GUI update": t6 - t5,
+        }
+
+        print(f"\nLoop total time: {total:.6f}s")
+        for name, duration in steps.items():
+            pct = (duration / total) * 100 if total > 0 else 0
+            print(f"{name:20s}: {duration:.6f}s ({pct:5.1f}%)")
 
     motor_left.stop()
     motor_right.stop()
@@ -136,7 +157,6 @@ if __name__ == "__main__":
         shutdown()
 
     finally:
-        # Always stop motors and join thread safely
         global_log_manager.log_info("Final cleanup: stopping motors", location="main")
         RUNNING = False
         motor_left.stop()
