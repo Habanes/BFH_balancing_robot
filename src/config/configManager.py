@@ -3,8 +3,9 @@ class ConfigManager:
         print("LOADING CONFIG")
         
         self.test_mode = False
+        
+        self.only_inner_loop = False
     
-
         # === Control loop update rates (Hz) ===
         self.velocity_to_tilt_angle_rate = 1000             # velocity → desired tilt angle
         self.tilt_angle_to_torque_rate = 5000               # measured tilt angle → torque
