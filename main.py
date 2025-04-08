@@ -44,65 +44,6 @@ last_log_time = time.time()
 RUNNING = True
 last_tilt_to_torque_time = 0
 
-def only_angle_control_loop():
-    global last_log_time, last_tilt_to_torque_time
-    global latest_angle, latest_torque
-    global wait_until_correct_angle
-
-    start_time = time.time()
-    target_torque = 0.0  # ensure it's initialized
-
-    motor_left.start()
-    motor_right.start()
-
-    while RUNNING:
-        current_time = time.time()
-
-        # === Sensor readings ===
-        estimated_tilt_angle = -imu.read_pitch()
-
-        # === Safety check ===
-        if current_time - start_time > global_config.angle_limit_time_delay and abs(estimated_tilt_angle) > global_config.angle_limit:
-            global_log_manager.log_critical(
-                f"Angle exceeded safe limit: {estimated_tilt_angle:.2f}. Stopping motors.", location="safety"
-            )
-            motor_left.stop()
-            motor_right.stop()
-            wait_until_correct_angle = True
-
-        if current_time - start_time > global_config.angle_limit_time_delay and abs(estimated_tilt_angle) < global_config.angle_limit and wait_until_correct_angle:
-            motor_left.start()
-            motor_right.start()
-            wait_until_correct_angle = False
-
-        # === Control loops ===
-        target_torque = pid_manager.pid_tilt_angle_to_torque.update(estimated_tilt_angle)
-
-        # === Motor Commands ===
-        motor_left.set_speed(target_torque)
-        motor_right.set_speed(target_torque)
-
-        # === Update shared values for GUI ===
-        latest_angle = estimated_tilt_angle
-        latest_torque = target_torque
-
-        # === Logging ===
-        if current_time - last_log_time >= LOG_INTERVAL:
-            global_log_manager.log_debug(
-                f"set={pid_manager.pid_tilt_angle_to_torque.target_angle:.2f}  "
-                f"est={estimated_tilt_angle:.2f}  "
-                f"tgtT={target_torque:.2f}  ",
-                location="loop"
-            )
-            last_log_time = current_time
-
-        time.sleep(global_config.main_loop_interval)
-
-    motor_left.stop()
-    motor_right.stop()
-    global_log_manager.log_info("Control loop exited", location="main")
-
-
 def entire_control_loop():
     global last_log_time, last_tilt_to_torque_time
     global latest_angle, latest_torque, latest_velocity, latest_target_velocity
@@ -145,7 +86,7 @@ def entire_control_loop():
         motor_encoder_right.update()
 
         # === Outer velocity loop (runs slower) ===
-        if velocity_loop_counter == 0:
+        if velocity_loop_counter == 0 and not global_config.only_inner_loop:
             avg_velocity = (motor_encoder_left.get_velocity() + motor_encoder_right.get_velocity()) / 2.0
             target_tilt_angle = pid_manager.pid_velocity_to_tilt_angle.update(avg_velocity)
             pid_manager.pid_tilt_angle_to_torque.target_angle = target_tilt_angle
@@ -193,10 +134,7 @@ if __name__ == "__main__":
     try:
         global_log_manager.log_info("Starting motors", location="main")
 
-        if global_config.only_inner_loop:
-            loop_thread = threading.Thread(target=only_angle_control_loop, daemon=True)
-        else:
-            loop_thread = threading.Thread(target=entire_control_loop, daemon=True)
+        loop_thread = threading.Thread(target=entire_control_loop, daemon=True)
 
         loop_thread.start()
 

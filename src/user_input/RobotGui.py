@@ -172,10 +172,9 @@ class RobotGui:
         self.error_var.set(f"{error:.2f}")
         self.torque_var.set(f"{torque:.2f}")
 
-        if not global_config.only_inner_loop:
-            vel_error = target_velocity - current_velocity
-            self.vel_var.set(f"{current_velocity:.2f}")
-            self.tgtvel_var.set(f"{target_velocity:.2f}")
-            self.velerror_var.set(f"{vel_error:.2f}")
+        vel_error = target_velocity - current_velocity
+        self.vel_var.set(f"{current_velocity:.2f}")
+        self.tgtvel_var.set(f"{target_velocity:.2f}")
+        self.velerror_var.set(f"{vel_error:.2f}")
 
         self.root.after(100, self.refresh_values)
