@@ -3,6 +3,7 @@ class ConfigManager:
         print("LOADING CONFIG")
         
         self.test_mode = False
+        self.imu_angle_offset = 6.7
     
 
         # === Control loop update rates (Hz) ===
