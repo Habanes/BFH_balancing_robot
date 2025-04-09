@@ -55,18 +55,39 @@ def control_loop():
         estimated_tilt_angle = -imu.read_pitch()
 
         # === Safety check ===
-        if current_time - start_time > global_config.angle_limit_time_delay and abs(estimated_tilt_angle) > global_config.angle_limit:
-            global_log_manager.log_critical(
-                f"Angle exceeded safe limit: {estimated_tilt_angle:.2f}. Stopping motors.", location="safety"
-            )
-            motor_left.stop()
-            motor_right.stop()
-            wait_until_correct_angle = True
+        if current_time - start_time > global_config.angle_limit_time_delay:
+            abs_angle = abs(estimated_tilt_angle)
 
-        if current_time - start_time > global_config.angle_limit_time_delay and abs(estimated_tilt_angle) < global_config.angle_limit and wait_until_correct_angle:
-            motor_left.start()
-            motor_right.start()
-            wait_until_correct_angle = False
+            if abs_angle > global_config.angle_limit:
+                # HARD LIMIT: stop everything
+                global_log_manager.log_critical(
+                    f"Angle exceeded hard limit: {estimated_tilt_angle:.2f}. Stopping motors.",
+                    location="safety"
+                )
+                motor_left.stop()
+                motor_right.stop()
+                wait_until_correct_angle = True
+
+            elif abs_angle > global_config.tilt_angle_soft_limit:
+                # SOFT LIMIT: still running, but set target angle to 0
+                if pid_manager.pid_tilt_angle_to_torque.target_angle != global_config.angle_neutral:
+                    global_log_manager.log_warning(
+                        f"Angle exceeded soft limit: {estimated_tilt_angle:.2f}. PID target set to 0.",
+                        location="safety"
+                    )
+                pid_manager.pid_tilt_angle_to_torque.target_angle = global_config.angle_neutral
+
+            else:
+                # Within safe range
+                if wait_until_correct_angle:
+                    motor_left.start()
+                    motor_right.start()
+                    wait_until_correct_angle = False
+
+                # Reset PID target angle to normal if it was set to 0 before
+                if pid_manager.pid_tilt_angle_to_torque.target_angle == global_config.angle_neutral:
+                    pid_manager.pid_tilt_angle_to_torque.target_angle = global_config.angle_neutral
+
 
         # === Control loops ===
         target_torque = pid_manager.pid_tilt_angle_to_torque.update(estimated_tilt_angle)

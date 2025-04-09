@@ -29,7 +29,7 @@ class ConfigManager:
         self.angle_rotation_speed = 90.0  # degrees per second
         self.angle_rotation = self.angle_rotation_speed / self.main_loop_rate
         self.angle_limit = 60.0
-        self.tilt_angle_soft_limit = 0.9 * self.angle_limit
+        self.tilt_angle_soft_limit = 30.0
 
         # === Output limitations ===
         self.torque_limit = 1.0
