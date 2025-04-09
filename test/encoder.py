@@ -26,12 +26,6 @@ class Encoder:
         if self.inverse_dir:
             self.steps = - self.steps
         return self.steps
-    
-    
-
-
-
-
 
 if __name__=="__main__":
     encoder_1 = Encoder(left_right=True)

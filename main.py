@@ -27,9 +27,6 @@ imu = IMU()
 motor_left = MotorController(is_left=True)
 motor_right = MotorController(is_left=False)
 
-motor_encoder_left = MotorEncoder(is_left=True)
-motor_encoder_right = MotorEncoder(is_left=False)
-
 pid_manager = pidManager()
 
 wait_until_correct_angle = True
