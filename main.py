@@ -71,15 +71,14 @@ def entire_control_loop():
 
         # === Outer velocity loop (runs slower) ===
         velocity_loop_counter = (velocity_loop_counter + 1) % VELOCITY_LOOP_DIVIDER
-        if velocity_loop_counter == 0:
+        if velocity_loop_counter == 0 and not global_config.only_inner_loop:
             motor_encoder_left.update()
             motor_encoder_right.update()
 
             avg_velocity = (motor_encoder_left.get_velocity() + motor_encoder_right.get_velocity()) / 2.0
             target_tilt_angle = pid_manager.pid_velocity_to_tilt_angle.update(avg_velocity)
 
-            if not global_config.only_inner_loop:
-                pid_manager.pid_tilt_angle_to_torque.target_angle = target_tilt_angle
+            pid_manager.pid_tilt_angle_to_torque.target_angle = target_tilt_angle
 
             latest_velocity = avg_velocity
             latest_target_velocity = pid_manager.pid_velocity_to_tilt_angle.target_velocity
@@ -115,6 +114,8 @@ def entire_control_loop():
             for name, duration in steps.items():
                 pct = (duration / total) * 100 if total > 0 else 0
                 print(f"{name:20s}: {duration:.6f}s ({pct:5.1f}%)")
+
+        time.sleep(global_config.main_loop_interval)
 
     motor_left.stop()
     motor_right.stop()

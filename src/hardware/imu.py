@@ -41,7 +41,7 @@ class IMU:
         value = (raw[1] << 8) | raw[0]
         if value > 32767:
             value -= 65536
-        return value / 16 + 90  + global_config.angle_neutral # Normalize offset
+        return value / 16 + 90  # Normalize offset
 
     def read_gyro_y(self) -> float:
         # Read and decode 16-bit Y-axis gyro value

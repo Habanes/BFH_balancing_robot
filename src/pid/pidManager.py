@@ -49,4 +49,4 @@ class pidManager:
         
     def setTargetVelocity(self,value):
         self.base_target_velocity = value
-        self.update_pid_target_angle()
+        self.update_pid_target_velocity()

@@ -6,7 +6,7 @@ class ConfigManager:
         self.log_timings = False
 
         # === Main loop tick rate (can be used as base loop) ===
-        self.main_loop_rate = 1000
+        self.main_loop_rate = 10000
         self.main_loop_interval = 1 / self.main_loop_rate
         self.base_velocity_loop_interval = self.main_loop_interval * 10
         self.log_interval = self.base_velocity_loop_interval / 2

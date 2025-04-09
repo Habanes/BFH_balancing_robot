@@ -134,7 +134,7 @@ class RobotGui:
     def update_control_velocity(self, value):
         try:
             val = float(value)
-            self.pid_manager.base_target_velocity(value)
+            self.pid_manager.setTargetVelocity(val)
         except ValueError:
             print("Invalid joystick input.")
 
