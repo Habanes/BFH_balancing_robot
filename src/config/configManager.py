@@ -3,6 +3,7 @@ class ConfigManager:
         print("LOADING CONFIG")
         
         self.only_inner_loop = True
+        self.log_timings = False
 
         # === Main loop tick rate (can be used as base loop) ===
         self.main_loop_rate = 1000
