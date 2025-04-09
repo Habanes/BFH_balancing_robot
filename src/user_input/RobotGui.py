@@ -18,7 +18,7 @@ class RobotGui:
         self.build_pid_controls()
         self.build_status_labels()
         self.build_offset_input()
-        self.build_joystick()
+        self.build_analog_joystick()
         self.refresh_values()
 
     def build_pid_controls(self):
@@ -52,25 +52,62 @@ class RobotGui:
 
         tk.Button(self.root, text="Set Dynamic Offset", command=self.set_dynamic_offset).grid(row=7, column=2)
 
-    def build_joystick(self):
-        tk.Label(self.root, text="Joystick (Y-axis)").grid(row=11, column=0)
-        self.joystick = tk.Scale(
-            self.root,
-            from_=15,
-            to=-15,
-            orient=tk.VERTICAL,
-            resolution=0.1,
-            command=self.update_control_angle
-        )
-        self.joystick.set(0)
-        self.joystick.grid(row=12, column=0, rowspan=3)
+    def build_analog_joystick(self):
+        tk.Label(self.root, text="Analog Joystick").grid(row=11, column=0, columnspan=2)
 
-    def update_control_angle(self, value):
+        self.joystick_canvas = tk.Canvas(self.root, width=150, height=150, bg="lightgray")
+        self.joystick_canvas.grid(row=12, column=0, columnspan=2, rowspan=3)
+
+        self.joystick_radius = 60
+        self.knob_radius = 10
+        self.center = (75, 75)
+        self.knob = self.joystick_canvas.create_oval(
+            75 - self.knob_radius, 75 - self.knob_radius,
+            75 + self.knob_radius, 75 + self.knob_radius,
+            fill="blue"
+        )
+
+        self.joystick_canvas.bind("<B1-Motion>", self.on_joystick_drag)
+        self.joystick_canvas.bind("<ButtonRelease-1>", self.reset_joystick)
+
+    def on_joystick_drag(self, event):
+        dx = event.x - self.center[0]
+        dy = event.y - self.center[1]
+        dist = (dx**2 + dy**2)**0.5
+
+        if dist > self.joystick_radius:
+            scale = self.joystick_radius / dist
+            dx *= scale
+            dy *= scale
+
+        x = self.center[0] + dx
+        y = self.center[1] + dy
+        self.joystick_canvas.coords(
+            self.knob,
+            x - self.knob_radius, y - self.knob_radius,
+            x + self.knob_radius, y + self.knob_radius
+        )
+
+        norm_x = dx / self.joystick_radius   # for future use (steering)
+        norm_y = -dy / self.joystick_radius  # inverted Y for logical control
+
         try:
-            val = float(value)
-            self.pid_manager.setTargetAngle(val)
-        except ValueError:
-            print("Invalid joystick input.")
+            self.pid_manager.setTargetAngle(norm_y)
+            # self.pid_manager.setSteering(norm_x)  # for future use
+        except AttributeError:
+            pass
+
+    def reset_joystick(self, _event):
+        self.joystick_canvas.coords(
+            self.knob,
+            self.center[0] - self.knob_radius, self.center[1] - self.knob_radius,
+            self.center[0] + self.knob_radius, self.center[1] + self.knob_radius
+        )
+        try:
+            self.pid_manager.setTargetAngle(0.0)
+            # self.pid_manager.setSteering(0.0)  # for future use
+        except AttributeError:
+            pass
 
     def set_dynamic_offset(self):
         try:
