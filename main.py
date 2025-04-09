@@ -70,10 +70,13 @@ def control_loop():
 
         # === Control loops ===
         target_torque = pid_manager.pid_tilt_angle_to_torque.update(estimated_tilt_angle)
+        
+        target_torque_left  = clip(target_torque + pid_manager.torque_differential, -1.0, 1.0)
+        target_torque_right = clip(target_torque - pid_manager.torque_differential, -1.0, 1.0)
 
         # === Motor Commands ===
-        motor_left.set_speed(target_torque)
-        motor_right.set_speed(target_torque)
+        motor_left.set_speed(target_torque_left)
+        motor_right.set_speed(target_torque_right)
 
         # === Update shared values for GUI ===
         latest_angle = estimated_tilt_angle
@@ -95,6 +98,9 @@ def control_loop():
     motor_left.stop()
     motor_right.stop()
     global_log_manager.log_info("Control loop exited", location="main")
+    
+def clip(value, min_val, max_val):
+    return max(min(value, max_val), min_val)
 
 # === Shutdown Handler ===
 def shutdown():

@@ -1,4 +1,6 @@
 import tkinter as tk
+import threading
+import time
 
 class RobotGui:
     def __init__(self, root, pid_manager, get_state_callback):
@@ -14,6 +16,9 @@ class RobotGui:
         self.error_var = tk.StringVar()
         self.torque_var = tk.StringVar()
         self.offset_entry = None
+
+        self.joystick_x = 0.0
+        self.joystick_y = 0.0
 
         self.build_pid_controls()
         self.build_status_labels()
@@ -88,12 +93,12 @@ class RobotGui:
             x + self.knob_radius, y + self.knob_radius
         )
 
-        norm_x = dx / self.joystick_radius   # for future use (steering)
-        norm_y = -dy / self.joystick_radius  # inverted Y for logical control
+        self.joystick_x = dx / self.joystick_radius
+        self.joystick_y = -dy / self.joystick_radius
 
         try:
-            self.pid_manager.setTargetAngle(norm_y)
-            # self.pid_manager.setSteering(norm_x)  # for future use
+            self.pid_manager.setTargetAngle(self.joystick_y)
+            # self.pid_manager.setSteering(self.joystick_x)  # for future use
         except AttributeError:
             pass
 
@@ -103,9 +108,12 @@ class RobotGui:
             self.center[0] - self.knob_radius, self.center[1] - self.knob_radius,
             self.center[0] + self.knob_radius, self.center[1] + self.knob_radius
         )
+        self.joystick_x = 0.0
+        self.joystick_y = 0.0
+
         try:
             self.pid_manager.setTargetAngle(0.0)
-            # self.pid_manager.setSteering(0.0)  # for future use
+            # self.pid_manager.setSteering(0.0)
         except AttributeError:
             pass
 
@@ -134,3 +142,37 @@ class RobotGui:
         self.torque_var.set(f"{torque:.2f}")
 
         self.root.after(100, self.refresh_values)
+
+
+# --- MAIN for standalone test ---
+if __name__ == "__main__":
+    class DummyPIDManager:
+        class DummyPID:
+            def __init__(self):
+                self.kp = 1.0
+                self.ki = 0.0
+                self.kd = 0.0
+                self.target_angle = 0.0
+
+        def __init__(self):
+            self.pid_tilt_angle_to_torque = self.DummyPID()
+
+        def setTargetAngle(self, val):
+            self.pid_tilt_angle_to_torque.target_angle = val
+
+        def set_dynamic_target_angle_offset(self, offset):
+            print(f"Set offset: {offset}")
+
+    def dummy_get_state():
+        return (0.0, 0.0)
+
+    root = tk.Tk()
+    gui = RobotGui(root, DummyPIDManager(), dummy_get_state)
+
+    def print_joystick_loop():
+        while True:
+            print(f"Joystick X: {gui.joystick_x:.2f}, Y: {gui.joystick_y:.2f}")
+            time.sleep(0.1)
+
+    threading.Thread(target=print_joystick_loop, daemon=True).start()
+    root.mainloop()

@@ -4,7 +4,7 @@ class ConfigManager:
         
         self.test_mode = False
         self.imu_angle_offset = 6.7
-    
+        self.torque_differential = 0.1
 
         # === Control loop update rates (Hz) ===
         self.velocity_to_tilt_angle_rate = 1000             # velocity → desired tilt angle

@@ -9,6 +9,8 @@ class pidManager:
         self.pid_tilt_angle_to_torque = PIDTiltAngleToTorque(0.03, 0.2, 0.0017, global_config.angle_neutral)
         
         # offset = 6.7 degrees
+        
+        self.torque_differential = 0.0
 
         self.base_target_angle = global_config.angle_neutral
         self.dynamic_target_angle_offset = 0.0
@@ -37,3 +39,7 @@ class pidManager:
     def setTargetAngle(self,value):
         self.base_target_angle = global_config.angle_neutral - value
         self.update_pid_target()
+
+    def setTargetTorqueDifferenital(self,value):
+        self.torque_differential = value * 0.2
+        
