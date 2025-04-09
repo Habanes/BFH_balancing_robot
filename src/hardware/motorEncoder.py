@@ -24,7 +24,7 @@ class MotorEncoder:
 
         self.steps = 0.0
 
-    def read(self) -> float:
+    def get_steps(self) -> float:
         # Return signed step count based on motor side
         self.steps = -self.encoder.steps if self.invert_direction else self.encoder.steps
         return self.steps
