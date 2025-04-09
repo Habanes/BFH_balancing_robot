@@ -5,6 +5,9 @@ import tkinter as tk
 from src.config.configManager import global_config
 from src.pid.pidManager import pidManager
 from src.log.logManager import global_log_manager
+from src.hardware.imu import IMU
+from src.hardware.motorController import MotorController
+from src.hardware.motorEncoder import MotorEncoder
 
 # === Shared Variables for GUI ===
 latest_angle = 0.0
@@ -12,34 +15,18 @@ latest_torque = 0.0
 latest_velocity = 0.0
 latest_target_velocity = 0.0
 
-def get_latest_state():
-    return latest_angle, latest_torque, latest_velocity, latest_target_velocity
-
 # === Initialization ===
 global_log_manager.log_info("Initializing components", location="main")
 
-# Use simulator if test mode is on
-if global_config.test_mode:
-    from src.hardware.sensorSimulator import SensorSimulator
-    sim = SensorSimulator()
-    imu = sim
-    motor_left = sim
-    motor_right = sim
-else:
-    from src.hardware.imu import IMU
-    from src.hardware.motorController import MotorController
-    from src.hardware.motorEncoder import MotorEncoder
-
-    imu = IMU()
-    motor_left = MotorController(is_left=True)
-    motor_right = MotorController(is_left=False)
-
+imu = IMU()
+motor_left = MotorController(is_left=True)
+motor_right = MotorController(is_left=False)
+motor_encoder_left = MotorEncoder(is_left=True)
+motor_encoder_right = MotorEncoder(is_left=False)
 pid_manager = pidManager()
-
 wait_until_correct_angle = True
 
 # === Control Loop ===
-LOG_INTERVAL = 0.25
 last_log_time = time.time()
 RUNNING = True
 last_tilt_to_torque_time = 0
@@ -51,9 +38,6 @@ def entire_control_loop():
 
     start_time = time.time()
     target_torque = 0.0
-
-    motor_encoder_left = MotorEncoder(is_left=True)
-    motor_encoder_right = MotorEncoder(is_left=False)
 
     velocity_loop_counter = 0
     VELOCITY_LOOP_DIVIDER = 50
@@ -71,7 +55,7 @@ def entire_control_loop():
         t1 = time.time()
 
         # === Safety check ===
-        if current_time - start_time > global_config.angle_limit_time_delay and abs(estimated_tilt_angle) > global_config.angle_limit:
+        if abs(estimated_tilt_angle) > global_config.angle_limit:
             global_log_manager.log_critical(
                 f"Angle exceeded safe limit: {estimated_tilt_angle:.2f}. Stopping motors.", location="safety"
             )
@@ -79,7 +63,7 @@ def entire_control_loop():
             motor_right.stop()
             wait_until_correct_angle = True
 
-        if current_time - start_time > global_config.angle_limit_time_delay and abs(estimated_tilt_angle) < global_config.angle_limit and wait_until_correct_angle:
+        if  abs(estimated_tilt_angle) < global_config.angle_limit and wait_until_correct_angle:
             motor_left.start()
             motor_right.start()
             wait_until_correct_angle = False
@@ -140,6 +124,9 @@ def shutdown():
     global RUNNING
     RUNNING = False
     global_log_manager.log_warning("Shutdown initiated by KeyboardInterrupt", location="main")
+    
+def get_latest_state():
+    return latest_angle, latest_torque, latest_velocity, latest_target_velocity
 
 if __name__ == "__main__":
     try:
