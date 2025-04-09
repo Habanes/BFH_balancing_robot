@@ -5,6 +5,9 @@ import tkinter as tk
 from src.config.configManager import global_config
 from src.pid.pidManager import pidManager
 from src.log.logManager import global_log_manager
+from src.hardware.imu import IMU
+from src.hardware.motorController import MotorController
+from src.hardware.motorEncoder import MotorEncoder
 
 # === Shared Variables for GUI ===
 latest_angle = 0.0
@@ -18,12 +21,14 @@ global_log_manager.log_info("Initializing components", location="main")
 
 # Use simulator if test mode is on
 
-from src.hardware.imu import IMU
-from src.hardware.motorController import MotorController
+
 
 imu = IMU()
 motor_left = MotorController(is_left=True)
 motor_right = MotorController(is_left=False)
+
+motor_encoder_left = MotorEncoder(is_left=True)
+motor_encoder_right = MotorEncoder(is_left=False)
 
 pid_manager = pidManager()
 
