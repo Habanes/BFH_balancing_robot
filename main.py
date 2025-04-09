@@ -17,19 +17,13 @@ def get_latest_state():
 global_log_manager.log_info("Initializing components", location="main")
 
 # Use simulator if test mode is on
-if global_config.test_mode:
-    from src.hardware.sensorSimulator import SensorSimulator
-    sim = SensorSimulator()
-    imu = sim
-    motor_left = sim
-    motor_right = sim
-else:
-    from src.hardware.imu import IMU
-    from src.hardware.motorController import MotorController
 
-    imu = IMU()
-    motor_left = MotorController(is_left=True)
-    motor_right = MotorController(is_left=False)
+from src.hardware.imu import IMU
+from src.hardware.motorController import MotorController
+
+imu = IMU()
+motor_left = MotorController(is_left=True)
+motor_right = MotorController(is_left=False)
 
 pid_manager = pidManager()
 
