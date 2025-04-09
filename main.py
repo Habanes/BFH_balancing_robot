@@ -47,7 +47,6 @@ def entire_control_loop():
 
     while RUNNING:
         loop_start = time.time()
-        current_time = time.time()
 
         # === Sensor readings ===
         t0 = time.time()
