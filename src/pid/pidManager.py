@@ -41,5 +41,5 @@ class pidManager:
         self.update_pid_target()
 
     def setTargetTorqueDifferenital(self,value):
-        self.torque_differential = value * 0.01
+        self.torque_differential = value * 0.03
         
