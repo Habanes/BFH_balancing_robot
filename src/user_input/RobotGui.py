@@ -20,7 +20,6 @@ class RobotGui:
         self.build_control_buttons()
         self.build_offset_input()
         self.build_joystick()
-        self.bind_keys()
         self.refresh_values()
 
     def build_pid_controls(self):
@@ -48,14 +47,8 @@ class RobotGui:
             tk.Label(self.root, textvariable=var).grid(row=j, column=1)
 
     def build_control_buttons(self):
-        button_config = [
-            ("Stop (SPACE)", self.pid_manager.stop),
-            ("Go Forward (W)", self.pid_manager.goForward),
-            ("Go Backward (S)", self.pid_manager.goBackward),
-        ]
-
-        for i, (label, command) in enumerate(button_config, start=8):
-            tk.Button(self.root, text=label, command=command).grid(row=i, column=0, columnspan=3, sticky="we", pady=2)
+        tk.Button(self.root, text="Stop (SPACE)", command=self.pid_manager.stop)\
+            .grid(row=8, column=0, columnspan=3, sticky="we", pady=2)
 
     def build_offset_input(self):
         tk.Label(self.root, text="Dynamic Offset").grid(row=7, column=0)
@@ -63,7 +56,7 @@ class RobotGui:
         self.offset_entry.grid(row=7, column=1)
 
         tk.Button(self.root, text="Set Dynamic Offset", command=self.set_dynamic_offset).grid(row=7, column=2)
-        
+
     def build_joystick(self):
         tk.Label(self.root, text="Joystick (Y-axis)").grid(row=11, column=0)
         self.joystick = tk.Scale(
@@ -76,7 +69,6 @@ class RobotGui:
         )
         self.joystick.set(0)
         self.joystick.grid(row=12, column=0, rowspan=3)
-
 
     def update_control_angle(self, value):
         try:
@@ -91,11 +83,6 @@ class RobotGui:
             self.pid_manager.set_dynamic_target_angle_offset(offset_value)
         except ValueError:
             print("Invalid input for dynamic offset.")
-
-    def bind_keys(self):
-        self.root.bind("<w>", lambda event: self.pid_manager.goForward())
-        self.root.bind("<s>", lambda event: self.pid_manager.goBackward())
-        self.root.bind("<space>", lambda event: self.pid_manager.stop())
 
     def update_pid_value(self, param):
         try:
