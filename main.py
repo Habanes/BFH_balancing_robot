@@ -100,20 +100,21 @@ def entire_control_loop():
         t6 = time.time()
 
         # === Log timings ===
-        total = t6 - loop_start
-        steps = {
-            "Read pitch": t1 - t0,
-            "Safety checks": t2 - t1,
-            "Velocity loop": t3 - t2,
-            "Torque PID": t4 - t3,
-            "Motor speed set": t5 - t4,
-            "GUI update": t6 - t5,
-        }
+        if global_config.log_timings:
+            total = t6 - loop_start
+            steps = {
+                "Read pitch": t1 - t0,
+                "Safety checks": t2 - t1,
+                "Velocity loop": t3 - t2,
+                "Torque PID": t4 - t3,
+                "Motor speed set": t5 - t4,
+                "GUI update": t6 - t5,
+            }
 
-        print(f"\nLoop total time: {total:.6f}s")
-        for name, duration in steps.items():
-            pct = (duration / total) * 100 if total > 0 else 0
-            print(f"{name:20s}: {duration:.6f}s ({pct:5.1f}%)")
+            print(f"\nLoop total time: {total:.6f}s")
+            for name, duration in steps.items():
+                pct = (duration / total) * 100 if total > 0 else 0
+                print(f"{name:20s}: {duration:.6f}s ({pct:5.1f}%)")
 
     motor_left.stop()
     motor_right.stop()
