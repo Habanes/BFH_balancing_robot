@@ -114,6 +114,7 @@ def entire_control_loop():
                 pct = (duration / total) * 100 if total > 0 else 0
                 print(f"{name:20s}: {duration:.6f}s ({pct:5.1f}%)")
 
+        global_log_manager.log_debug(time.time)
         time.sleep(global_config.main_loop_interval)
 
     motor_left.stop()
