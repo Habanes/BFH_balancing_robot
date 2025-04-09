@@ -17,7 +17,6 @@ class RobotGui:
 
         self.build_pid_controls()
         self.build_status_labels()
-        self.build_control_buttons()
         self.build_offset_input()
         self.build_joystick()
         self.refresh_values()
@@ -45,10 +44,6 @@ class RobotGui:
         for j, (label, var) in enumerate(labels, start=4):
             tk.Label(self.root, text=label).grid(row=j, column=0)
             tk.Label(self.root, textvariable=var).grid(row=j, column=1)
-
-    def build_control_buttons(self):
-        tk.Button(self.root, text="Stop (SPACE)", command=self.pid_manager.stop)\
-            .grid(row=8, column=0, columnspan=3, sticky="we", pady=2)
 
     def build_offset_input(self):
         tk.Label(self.root, text="Dynamic Offset").grid(row=7, column=0)
