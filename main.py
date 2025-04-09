@@ -1,127 +1,136 @@
-import threading
-import time
 import tkinter as tk
 
-from src.config.configManager import global_config
-from src.pid.pidManager import pidManager
-from src.log.logManager import global_log_manager
-from src.hardware.imu import IMU
-from src.hardware.motorController import MotorController
-from src.hardware.motorEncoder import MotorEncoder
+class RobotGui:
+    def __init__(self, root, pid_manager, get_state_callback):
+        self.root = root
+        self.root.title("PID Controller GUI")
 
-# === Shared Variables for GUI ===
-latest_angle = 0.0
-latest_torque = 0.0
+        self.pid_manager = pid_manager
+        self.get_state = get_state_callback
 
-def get_latest_state():
-    return latest_angle, latest_torque
+        self.entries = {}
+        self.angle_var = tk.StringVar()
+        self.tgtangle_var = tk.StringVar()
+        self.error_var = tk.StringVar()
+        self.torque_var = tk.StringVar()
+        self.offset_entry = None
 
-# === Initialization ===
-global_log_manager.log_info("Initializing components", location="main")
+        self.build_pid_controls()
+        self.build_status_labels()
+        self.build_offset_input()
+        self.build_analog_joystick()
+        self.refresh_values()
 
-# Use simulator if test mode is on
+    def build_pid_controls(self):
+        for i, param in enumerate(["kp", "ki", "kd"]):
+            tk.Label(self.root, text=param.upper()).grid(row=i, column=0)
 
+            entry = tk.Entry(self.root)
+            entry.insert(0, str(getattr(self.pid_manager.pid_tilt_angle_to_torque, param)))
+            entry.grid(row=i, column=1)
+            self.entries[param] = entry
 
+            btn = tk.Button(self.root, text="Update", command=lambda p=param: self.update_pid_value(p))
+            btn.grid(row=i, column=2)
 
-imu = IMU()
-motor_left = MotorController(is_left=True)
-motor_right = MotorController(is_left=False)
+    def build_status_labels(self):
+        labels = [
+            ("Current Angle", self.angle_var),
+            ("Target Angle", self.tgtangle_var),
+            ("Angle Error",  self.error_var),
+            ("Torque",       self.torque_var),
+        ]
 
-pid_manager = pidManager()
+        for j, (label, var) in enumerate(labels, start=4):
+            tk.Label(self.root, text=label).grid(row=j, column=0)
+            tk.Label(self.root, textvariable=var).grid(row=j, column=1)
 
-wait_until_correct_angle = True
+    def build_offset_input(self):
+        tk.Label(self.root, text="Dynamic Offset").grid(row=7, column=0)
+        self.offset_entry = tk.Entry(self.root)
+        self.offset_entry.grid(row=7, column=1)
 
-# === Control Loop ===
-LOG_INTERVAL = 0.25
-last_log_time = time.time()
-RUNNING = True
-last_tilt_to_torque_time = 0
+        tk.Button(self.root, text="Set Dynamic Offset", command=self.set_dynamic_offset).grid(row=7, column=2)
 
-def control_loop():
-    global last_log_time, last_tilt_to_torque_time
-    global latest_angle, latest_torque
-    global wait_until_correct_angle
+    def build_analog_joystick(self):
+        tk.Label(self.root, text="Analog Joystick").grid(row=11, column=0, columnspan=2)
 
-    start_time = time.time()
-    target_torque = 0.0  # ensure it's initialized
+        self.joystick_canvas = tk.Canvas(self.root, width=150, height=150, bg="lightgray")
+        self.joystick_canvas.grid(row=12, column=0, columnspan=2, rowspan=3)
 
-    motor_left.start()
-    motor_right.start()
+        self.joystick_radius = 60
+        self.knob_radius = 10
+        self.center = (75, 75)
+        self.knob = self.joystick_canvas.create_oval(
+            75 - self.knob_radius, 75 - self.knob_radius,
+            75 + self.knob_radius, 75 + self.knob_radius,
+            fill="blue"
+        )
 
-    while RUNNING:
-        current_time = time.time()
+        self.joystick_canvas.bind("<B1-Motion>", self.on_joystick_drag)
+        self.joystick_canvas.bind("<ButtonRelease-1>", self.reset_joystick)
 
-        # === Sensor readings ===
-        estimated_tilt_angle = -imu.read_pitch()
+    def on_joystick_drag(self, event):
+        dx = event.x - self.center[0]
+        dy = event.y - self.center[1]
+        dist = (dx**2 + dy**2)**0.5
 
-        # === Safety check ===
-        if current_time - start_time > global_config.angle_limit_time_delay and abs(estimated_tilt_angle) > global_config.angle_limit:
-            global_log_manager.log_critical(
-                f"Angle exceeded safe limit: {estimated_tilt_angle:.2f}. Stopping motors.", location="safety"
-            )
-            motor_left.stop()
-            motor_right.stop()
-            wait_until_correct_angle = True
+        if dist > self.joystick_radius:
+            scale = self.joystick_radius / dist
+            dx *= scale
+            dy *= scale
 
-        if current_time - start_time > global_config.angle_limit_time_delay and abs(estimated_tilt_angle) < global_config.angle_limit and wait_until_correct_angle:
-            motor_left.start()
-            motor_right.start()
-            wait_until_correct_angle = False
+        x = self.center[0] + dx
+        y = self.center[1] + dy
+        self.joystick_canvas.coords(
+            self.knob,
+            x - self.knob_radius, y - self.knob_radius,
+            x + self.knob_radius, y + self.knob_radius
+        )
 
-        # === Control loops ===
-        target_torque = pid_manager.pid_tilt_angle_to_torque.update(estimated_tilt_angle)
+        norm_x = dx / self.joystick_radius   # for future use (steering)
+        norm_y = -dy / self.joystick_radius  # inverted Y for logical control
 
-        # === Motor Commands ===
-        motor_left.set_speed(target_torque * 0.99)
-        motor_right.set_speed(target_torque * 1.01)
+        try:
+            self.pid_manager.setTargetAngle(norm_y)
+            # self.pid_manager.setSteering(norm_x)  # for future use
+        except AttributeError:
+            pass
 
-        # === Update shared values for GUI ===
-        latest_angle = estimated_tilt_angle
-        latest_torque = target_torque
+    def reset_joystick(self, _event):
+        self.joystick_canvas.coords(
+            self.knob,
+            self.center[0] - self.knob_radius, self.center[1] - self.knob_radius,
+            self.center[0] + self.knob_radius, self.center[1] + self.knob_radius
+        )
+        try:
+            self.pid_manager.setTargetAngle(0.0)
+            # self.pid_manager.setSteering(0.0)  # for future use
+        except AttributeError:
+            pass
 
-        # === Logging ===
-        if current_time - last_log_time >= LOG_INTERVAL:
-            global_log_manager.log_debug(
-                f"set={pid_manager.pid_tilt_angle_to_torque.target_angle:.2f}  "
-                f"est={estimated_tilt_angle:.2f}  "
-                f"tgtT={target_torque:.2f}  ",
-                location="loop"
-            )
-            last_log_time = current_time
+    def set_dynamic_offset(self):
+        try:
+            offset_value = float(self.offset_entry.get())
+            self.pid_manager.set_dynamic_target_angle_offset(offset_value)
+        except ValueError:
+            print("Invalid input for dynamic offset.")
 
-        global_log_manager.log_debug(time.time)
-        time.sleep(global_config.main_loop_interval)
+    def update_pid_value(self, param):
+        try:
+            val = float(self.entries[param].get())
+            setattr(self.pid_manager.pid_tilt_angle_to_torque, param, val)
+        except ValueError:
+            print(f"Invalid input for {param}")
 
-    motor_left.stop()
-    motor_right.stop()
-    global_log_manager.log_info("Control loop exited", location="main")
+    def refresh_values(self):
+        current_angle, torque = self.get_state()
+        target_angle = self.pid_manager.pid_tilt_angle_to_torque.target_angle
+        error = target_angle - current_angle
 
-# === Shutdown Handler ===
-def shutdown():
-    global RUNNING
-    RUNNING = False
-    global_log_manager.log_warning("Shutdown initiated by KeyboardInterrupt", location="main")
+        self.angle_var.set(f"{current_angle:.2f}")
+        self.tgtangle_var.set(f"{target_angle:.2f}")
+        self.error_var.set(f"{error:.2f}")
+        self.torque_var.set(f"{torque:.2f}")
 
-if __name__ == "__main__":
-    try:
-        global_log_manager.log_info("Starting motors", location="main")
-
-        loop_thread = threading.Thread(target=control_loop, daemon=True)
-        loop_thread.start()
-
-        from src.user_input.RobotGui import RobotGui
-        root = tk.Tk()
-        gui = RobotGui(root, pid_manager, get_latest_state)
-        root.mainloop()
-
-    except KeyboardInterrupt:
-        shutdown()
-
-    finally:
-        # Always stop motors and join thread safely
-        global_log_manager.log_info("Final cleanup: stopping motors", location="main")
-        RUNNING = False
-        motor_left.stop()
-        motor_right.stop()
-        loop_thread.join()
-        global_log_manager.log_info("Shutdown complete", location="main")
+        self.root.after(100, self.refresh_values)
