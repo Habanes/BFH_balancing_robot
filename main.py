@@ -72,8 +72,8 @@ def control_loop():
         target_torque = pid_manager.pid_tilt_angle_to_torque.update(estimated_tilt_angle)
 
         # === Motor Commands ===
-        motor_left.set_speed(target_torque)
-        motor_right.set_speed(target_torque)
+        motor_left.set_speed(target_torque * 0.99)
+        motor_right.set_speed(target_torque * 1.01)
 
         # === Update shared values for GUI ===
         latest_angle = estimated_tilt_angle
