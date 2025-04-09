@@ -37,9 +37,9 @@ class pidManager:
         self.update_pid_target()
         
     def setTargetAngle(self,value):
-        self.base_target_angle = global_config.angle_neutral - value
+        self.base_target_angle = global_config.angle_neutral - value * 10
         self.update_pid_target()
 
     def setTargetTorqueDifferenital(self,value):
-        self.torque_differential = value * 0.2
+        self.torque_differential = value * 0.05
         
