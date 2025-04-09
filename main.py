@@ -71,8 +71,8 @@ def control_loop():
         # === Control loops ===
         target_torque = pid_manager.pid_tilt_angle_to_torque.update(estimated_tilt_angle)
         
-        target_torque_left  = clip(target_torque + pid_manager.torque_differential, -1.0, 1.0)
-        target_torque_right = clip(target_torque - pid_manager.torque_differential, -1.0, 1.0)
+        target_torque_left  = clip(target_torque - pid_manager.torque_differential, -1.0, 1.0)
+        target_torque_right = clip(target_torque + pid_manager.torque_differential, -1.0, 1.0)
 
         # === Motor Commands ===
         motor_left.set_speed(target_torque_left)
