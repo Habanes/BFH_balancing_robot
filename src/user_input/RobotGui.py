@@ -98,7 +98,7 @@ class RobotGui:
 
         try:
             self.pid_manager.setTargetAngle(self.joystick_y)
-            self.pid_manager.setTargetTorqueDifferenital(self.joystick_x * 10)
+            self.pid_manager.setTargetTorqueDifferenital(self.joystick_x)
         except AttributeError:
             pass
 
