@@ -1,5 +1,4 @@
 from src.config.configManager import global_config
-from src.pid.PIDAngularVelocityToTorqueDifferential import PIDAngularVelocityToTorqueDifferential
 from src.pid.PIDEstimatedTorqueToTorque import PIDEstimatedTorqueToTorque
 from src.pid.PIDTiltAngleToTorque import PIDTiltAngleToTorque
 from src.pid.PIDVelocityToTiltAngle import PIDVelocityToTiltAngle
