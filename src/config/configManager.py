@@ -8,7 +8,7 @@ class ConfigManager:
         self.print_to_console = True
 
         # === IMU and angle settings ===
-        self.imu_angle_offset = 13.2
+        self.imu_angle_offset = -13.2
         self.angle_neutral = 0.0
         self.angle_limit = 60.0
         self.tilt_angle_soft_limit = 30.0
