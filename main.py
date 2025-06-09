@@ -13,7 +13,7 @@ latest_angle = 0.0
 latest_torque = 0.0
 
 def get_latest_state():
-    return latest_angle
+    return latest_angle, latest_torque
 
 # === Initialization ===
 global_log_manager.log_info("Initializing components", location="main")
