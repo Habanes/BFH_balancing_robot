@@ -28,7 +28,7 @@ class IMU:
         self.bus=bus
 
         self.bus.write_byte_data(DEV_ADDR,OPR_MODE_ADDR,CONFIG_MODE) # Set into config mode
-        opr_mode = self.bus.read_byte_data(DEV_ADDR,OPR_MODE_ADDR)
+        opr_mode = self.bus.read_byte_data(DEV_ADDR,OPR_MODE_ADDR)        
         if opr_mode == 0:
             self.bus.write_byte_data(DEV_ADDR,OPR_MODE_ADDR,NDOF_MODE) # Set into 9DOF mode
             opr_mode = self.bus.read_byte_data(DEV_ADDR,OPR_MODE_ADDR)
@@ -38,16 +38,18 @@ class IMU:
             else:
                 print("IMU INIT DONE")
         
-
-        
     def read_pitch(self):
+        data = self.bus.read_i2c_block_data(DEV_ADDR,PITCH_LSB,2)
+        pitch = ((data[1] << 8) | data[0]) & 0xffff
 
-            data = self.bus.read_i2c_block_data(DEV_ADDR,PITCH_LSB,2)
-            pitch = ((data[1] << 8) | data[0]) & 0xffff
-
-            if pitch > 32767:
-                pitch -= 65536
-            return (pitch/16)+90 + global_config.angle_offset
+        if pitch > 32767:
+            pitch -= 65536
+        
+        # Use same variable and logic as main IMU
+        # Subtract offset so when IMU reads +6.7°, we return 0° (upright)
+        angle_degrees = (pitch/16) + 90 - global_config.imu_mounting_offset
+        return angle_degrees
+        return angle_degrees
 
 
     def read_gyro(self):

@@ -3,7 +3,11 @@ class ConfigManager:
         print("LOADING CONFIG")
         
         self.test_mode = False
-        self.imu_angle_offset = 6.7
+        
+        # === IMU Calibration (CONSOLIDATED) ===
+        # Angle IMU reads when robot is perfectly upright - used to correct mounting offset
+        self.imu_mounting_offset = 6.7
+        
         self.torque_differential = 0.1
 
         # === Control loop update rates (Hz) ===
@@ -25,7 +29,6 @@ class ConfigManager:
         # === Motion and angle settings ===
         self.base_velocity = 0.1
         self.angle_neutral = 0.0
-        self.angle_offset = 6.7
         self.angle_rotation_speed = 90.0  # degrees per second
         self.angle_rotation = self.angle_rotation_speed / self.main_loop_rate
         self.angle_limit = 60.0

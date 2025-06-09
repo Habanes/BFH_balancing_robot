@@ -28,21 +28,34 @@ class IMU:
     def _initialize(self):
         # Set to config mode first
         self.bus.write_byte_data(IMU_ADDR, REG_MODE, MODE_CONFIG)
-        if self.bus.read_byte_data(IMU_ADDR, REG_MODE) == MODE_CONFIG:
-            # Switch to NDOF mode (sensor fusion)
+        if self.bus.read_byte_data(IMU_ADDR, REG_MODE) == MODE_CONFIG:            # Switch to NDOF mode (sensor fusion)
             self.bus.write_byte_data(IMU_ADDR, REG_MODE, MODE_NDOF)
             if self.bus.read_byte_data(IMU_ADDR, REG_MODE) != MODE_NDOF:
                 raise RuntimeError("IMU failed to initialize NDOF mode")
             print("IMU initialized")
 
-      
     def read_pitch(self) -> float:
         # Read and decode 16-bit pitch value
         raw = self.bus.read_i2c_block_data(IMU_ADDR, REG_PITCH_LSB, 2)
         value = (raw[1] << 8) | raw[0]
         if value > 32767:
             value -= 65536
-        return ( value / 16 + 90 ) + global_config.imu_angle_offset # Normalize offset
+        
+        # Convert to degrees and apply mounting offset correction
+        # Subtract offset so when IMU reads +6.7°, we return 0° (upright)
+        angle_degrees = (value / 16 + 90) - global_config.imu_mounting_offset
+        return angle_degrees
+
+    def read_pitch_raw(self) -> float:
+        """Read raw pitch value without offset correction for debugging"""
+        raw = self.bus.read_i2c_block_data(IMU_ADDR, REG_PITCH_LSB, 2)
+        value = (raw[1] << 8) | raw[0]
+        if value > 32767:
+            value -= 65536
+        
+        # Convert to degrees but don't apply offset
+        raw_angle_degrees = value / 16 + 90
+        return raw_angle_degrees
 
     def read_gyro_y(self) -> float:
         # Read and decode 16-bit Y-axis gyro value

@@ -49,10 +49,9 @@ def control_loop():
     motor_right.start()
 
     while RUNNING:
-        current_time = time.time()
-
-        # === Sensor readings ===
-        estimated_tilt_angle = -imu.read_pitch()
+        current_time = time.time()        # === Sensor readings ===
+        raw_imu_reading = imu.read_pitch_raw()  # For debugging
+        estimated_tilt_angle = imu.read_pitch()
 
         # === Safety check ===:
         abs_angle = abs(estimated_tilt_angle)
@@ -100,15 +99,15 @@ def control_loop():
 
         # === Update shared values for GUI ===
         latest_angle = estimated_tilt_angle
-        latest_torque = target_torque
-
-        # === Logging ===
+        latest_torque = target_torque        # === Logging ===
         if current_time - last_log_time >= LOG_INTERVAL:
             global_log_manager.log_debug(
+                f"raw_imu={raw_imu_reading:.2f}  "
+                f"corrected={estimated_tilt_angle:.2f}  "
+                f"offset={global_config.imu_mounting_offset:.2f}  "
                 f"set={pid_manager.pid_tilt_angle_to_torque.target_angle:.2f}  "
-                f"est={estimated_tilt_angle:.2f}  "
                 f"tgtT={target_torque:.2f}  ",
-                location="loop"
+                location="debug"
             )
             last_log_time = current_time
 
