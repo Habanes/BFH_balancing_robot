@@ -18,10 +18,10 @@ class ConfigManager:
         # === Control loop intervals (s) ===
         self.velocity_to_tilt_angle_interval = 1 / self.velocity_to_tilt_angle_rate
         self.tilt_angle_to_torque_interval = 1 / self.tilt_angle_to_torque_rate
-        self.angular_velocity_to_torque_diff_interval = 1 / self.angular_velocity_to_torque_diff_rate
-
-        # === Main loop tick rate (can be used as base loop) ===
-        self.main_loop_rate = 10000
+        self.angular_velocity_to_torque_diff_interval = 1 / self.angular_velocity_to_torque_diff_rate        # === Main loop tick rate (can be used as base loop) ===
+        # PERFORMANCE NOTE: 10kHz with encoder reads can cause timing issues
+        # Reduced to 5kHz for better stability with encoder integration
+        self.main_loop_rate = 5000  # Reduced from 10000 for encoder compatibility
         self.main_loop_interval = 1 / self.main_loop_rate
 
         # === Motion and angle settings ===

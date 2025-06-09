@@ -1,3 +1,17 @@
+#!/usr/bin/env python3
+"""
+OPTIMIZED MAIN.PY FOR ENCODER INTEGRATION
+Test version with different timing optimization strategies
+
+CHANGES FROM ORIGINAL:
+1. Reduced main loop from 10kHz to 5kHz for better stability
+2. Encoder reads at 1kHz (every 5th iteration) to reduce timing pressure
+3. Added timing monitoring to detect performance issues
+4. Smart encoder update strategy to maintain position tracking accuracy
+
+Run this version to test improved stability with encoder integration.
+"""
+
 import threading
 import time
 import tkinter as tk
@@ -22,9 +36,7 @@ def get_latest_state():
             latest_left_travel, latest_right_travel)
 
 # === Initialization ===
-global_log_manager.log_info("Initializing components", location="main")
-
-# Use simulator if test mode is on
+global_log_manager.log_info("Initializing components (OPTIMIZED VERSION)", location="main")
 
 imu = IMU()
 motor_left = MotorController(is_left=True)
@@ -42,39 +54,50 @@ pid_manager = pidManager()
 
 wait_until_correct_angle = True
 
-# === Control Loop ===
+# === Optimized Control Loop ===
 LOG_INTERVAL = 0.25
+TIMING_LOG_INTERVAL = 5.0  # Log timing stats every 5 seconds
 last_log_time = time.time()
+last_timing_log_time = time.time()
 RUNNING = True
-last_tilt_to_torque_time = 0
 
-# === Timing optimization for encoder reads ===
-ENCODER_READ_RATE = 1000  # Hz - Read encoders at 1kHz instead of 10kHz
-encoder_read_interval = 1.0 / ENCODER_READ_RATE
-last_encoder_read_time = 0
+# === Encoder timing optimization ===
+ENCODER_READ_DECIMATION = 5  # Read encoders every 5th iteration (1kHz instead of 5kHz)
+encoder_read_counter = 0
+
+# === Timing monitoring ===
+loop_times = []
+max_timing_samples = 1000
 
 def control_loop():
-    global last_log_time, last_tilt_to_torque_time, last_encoder_read_time
+    global last_log_time, last_timing_log_time, encoder_read_counter
     global latest_angle, latest_torque
     global latest_left_position, latest_right_position, latest_left_travel, latest_right_travel
-    global wait_until_correct_angle
+    global wait_until_correct_angle, loop_times
 
     start_time = time.time()
-    target_torque = 0.0  # ensure it's initialized
+    target_torque = 0.0
 
     motor_left.start()
     motor_right.start()
 
+    global_log_manager.log_info(f"Starting optimized control loop at {global_config.main_loop_rate}Hz", location="main")
+    global_log_manager.log_info(f"Encoder read rate: {global_config.main_loop_rate/ENCODER_READ_DECIMATION}Hz", location="main")
+
     while RUNNING:
+        loop_start_time = time.perf_counter()
         current_time = time.time()        
         
-        # === Sensor readings ===
-        raw_imu_reading = imu.read_pitch_raw()  # For debugging
+        # === Sensor readings (every iteration) ===
+        raw_imu_reading = imu.read_pitch_raw()
         estimated_tilt_angle = imu.read_pitch()
         
-        # === Encoder readings (optimized timing) ===
-        # Only read encoders at 1kHz instead of 10kHz to improve timing
-        if current_time - last_encoder_read_time >= encoder_read_interval:
+        # === Encoder readings (decimated for timing optimization) ===
+        encoder_read_counter += 1
+        if encoder_read_counter >= ENCODER_READ_DECIMATION:
+            encoder_read_counter = 0
+            
+            # Read all encoder values at reduced frequency
             left_position = encoder_left.get_steps()
             right_position = encoder_right.get_steps()
             left_travel = encoder_left.update_travel_distance()
@@ -85,14 +108,11 @@ def control_loop():
             latest_right_position = right_position
             latest_left_travel = left_travel
             latest_right_travel = right_travel
-            
-            last_encoder_read_time = current_time
 
-        # === Safety check ===:
+        # === Safety check ===
         abs_angle = abs(estimated_tilt_angle)
 
         if abs_angle > global_config.angle_limit:
-            # HARD LIMIT: stop everything
             global_log_manager.log_critical(
                 f"Angle exceeded hard limit: {estimated_tilt_angle:.2f}. Stopping motors.",
                 location="safety"
@@ -102,7 +122,6 @@ def control_loop():
             wait_until_correct_angle = True
 
         elif abs_angle > global_config.tilt_angle_soft_limit:
-            # SOFT LIMIT: still running, but set target angle to 0
             if pid_manager.pid_tilt_angle_to_torque.target_angle != global_config.angle_neutral:
                 global_log_manager.log_warning(
                     f"Angle exceeded soft limit: {estimated_tilt_angle:.2f}. PID target set to 0.",
@@ -111,51 +130,80 @@ def control_loop():
             pid_manager.pid_tilt_angle_to_torque.target_angle = global_config.angle_neutral
 
         else:
-            # Within safe range
             if wait_until_correct_angle:
                 motor_left.start()
                 motor_right.start()
                 wait_until_correct_angle = False
             
-            # Reset PID target angle to normal if it was set to neutral before
             if pid_manager.pid_tilt_angle_to_torque.target_angle == global_config.angle_neutral:
-                pid_manager.update_pid_target()  # Restore proper target angle
-
+                pid_manager.update_pid_target()
 
         # === Control loops ===
         target_torque = pid_manager.pid_tilt_angle_to_torque.update(estimated_tilt_angle)
         
         target_torque_left  = clip(target_torque - pid_manager.torque_differential, -1.0, 1.0)
-        target_torque_right = clip(target_torque + pid_manager.torque_differential, -1.0, 1.0)        
+        target_torque_right = clip(target_torque + pid_manager.torque_differential, -1.0, 1.0)
+        
         # === Motor Commands ===
         motor_left.set_speed(target_torque_left)
-        motor_right.set_speed(target_torque_right)        # === Update shared values for GUI ===
+        motor_right.set_speed(target_torque_right)
+
+        # === Update shared values for GUI ===
         latest_angle = estimated_tilt_angle
         latest_torque = target_torque
-        # Encoder values updated above at 1kHz rate
+
+        # === Timing monitoring ===
+        loop_end_time = time.perf_counter()
+        loop_duration = (loop_end_time - loop_start_time) * 1000  # Convert to ms
+        
+        if len(loop_times) < max_timing_samples:
+            loop_times.append(loop_duration)
+        else:
+            loop_times[len(loop_times) % max_timing_samples] = loop_duration
 
         # === Logging ===
         if current_time - last_log_time >= LOG_INTERVAL:
             global_log_manager.log_debug(
-                f"raw_imu={raw_imu_reading:.2f}  "
-                f"corrected={estimated_tilt_angle:.2f}  "
-                f"offset={global_config.imu_mounting_offset:.2f}  "
-                f"set={pid_manager.pid_tilt_angle_to_torque.target_angle:.2f}  "
-                f"tgtT={target_torque:.2f}  "
-                f"encL={latest_left_position:.0f}  "
-                f"encR={latest_right_position:.0f}  "
-                f"travL={latest_left_travel:.0f}  "
-                f"travR={latest_right_travel:.0f}  ",
+                f"raw_imu={raw_imu_reading:.2f} "
+                f"corrected={estimated_tilt_angle:.2f} "
+                f"set={pid_manager.pid_tilt_angle_to_torque.target_angle:.2f} "
+                f"tgtT={target_torque:.2f} "
+                f"encL={latest_left_position:.0f} "
+                f"encR={latest_right_position:.0f} "
+                f"travL={latest_left_travel:.0f} "
+                f"travR={latest_right_travel:.0f}",
                 location="debug"
             )
             last_log_time = current_time
 
-        global_log_manager.log_debug(time.time)
+        # === Timing performance logging ===
+        if current_time - last_timing_log_time >= TIMING_LOG_INTERVAL and len(loop_times) > 100:
+            avg_time = sum(loop_times) / len(loop_times)
+            max_time = max(loop_times)
+            target_time = global_config.main_loop_interval * 1000  # Convert to ms
+            
+            global_log_manager.log_info(
+                f"TIMING: Avg={avg_time:.3f}ms Max={max_time:.3f}ms Target={target_time:.3f}ms "
+                f"OverBudget={max_time/target_time:.1f}x EncoderRate={global_config.main_loop_rate/ENCODER_READ_DECIMATION}Hz",
+                location="performance"
+            )
+            
+            if max_time > target_time * 1.5:
+                global_log_manager.log_warning(
+                    f"Loop timing over budget! Consider reducing frequency or encoder read rate.",
+                    location="performance"
+                )
+            
+            last_timing_log_time = current_time
+            # Reset timing buffer periodically
+            loop_times = loop_times[-100:]  # Keep last 100 samples
+
+        # === Loop timing ===
         time.sleep(global_config.main_loop_interval)
 
     motor_left.stop()
     motor_right.stop()
-    global_log_manager.log_info("Control loop exited", location="main")
+    global_log_manager.log_info("Optimized control loop exited", location="main")
     
 def clip(value, min_val, max_val):
     return max(min(value, max_val), min_val)
@@ -168,7 +216,8 @@ def shutdown():
 
 if __name__ == "__main__":
     try:
-        global_log_manager.log_info("Starting motors", location="main")
+        global_log_manager.log_info("Starting OPTIMIZED balancing robot", location="main")
+        global_log_manager.log_info(f"Main loop: {global_config.main_loop_rate}Hz, Encoder decimation: 1/{ENCODER_READ_DECIMATION}", location="main")
 
         loop_thread = threading.Thread(target=control_loop, daemon=True)
         loop_thread.start()
@@ -182,7 +231,6 @@ if __name__ == "__main__":
         shutdown()
 
     finally:
-        # Always stop motors and join thread safely
         global_log_manager.log_info("Final cleanup: stopping motors", location="main")
         RUNNING = False
         motor_left.stop()
