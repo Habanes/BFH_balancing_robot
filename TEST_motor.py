@@ -1,5 +1,5 @@
 from gpiozero import DigitalOutputDevice, PWMOutputDevice
-from hardwarePWMLib import HardwarePWM
+from TEST_hardwarePWMLib import HardwarePWM
 import time
 
 

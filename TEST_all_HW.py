@@ -1,7 +1,7 @@
-from currentMeas import CurrentMeas
-from motor import Motor
-from encoder import Encoder
-from imu import IMU
+from TEST_currentMeas import CurrentMeas
+from TEST_motor import Motor
+from TEST_encoder import Encoder
+from TEST_imu import IMU
 import numpy as np
 import matplotlib.pyplot as plt
 import time
