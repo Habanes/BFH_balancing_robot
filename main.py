@@ -12,9 +12,14 @@ from src.hardware.motorEncoder import MotorEncoder
 # === Shared Variables for GUI ===
 latest_angle = 0.0
 latest_torque = 0.0
+latest_left_position = 0.0
+latest_right_position = 0.0
+latest_left_travel = 0.0
+latest_right_travel = 0.0
 
 def get_latest_state():
-    return latest_angle, latest_torque
+    return (latest_angle, latest_torque, latest_left_position, latest_right_position, 
+            latest_left_travel, latest_right_travel)
 
 # === Initialization ===
 global_log_manager.log_info("Initializing components", location="main")
@@ -24,6 +29,14 @@ global_log_manager.log_info("Initializing components", location="main")
 imu = IMU()
 motor_left = MotorController(is_left=True)
 motor_right = MotorController(is_left=False)
+
+# Initialize encoders for position tracking
+encoder_left = MotorEncoder(is_left=True)
+encoder_right = MotorEncoder(is_left=False)
+
+# Reset travel distance counters
+encoder_left.reset_travel_distance()
+encoder_right.reset_travel_distance()
 
 pid_manager = pidManager()
 
@@ -38,6 +51,7 @@ last_tilt_to_torque_time = 0
 def control_loop():
     global last_log_time, last_tilt_to_torque_time
     global latest_angle, latest_torque
+    global latest_left_position, latest_right_position, latest_left_travel, latest_right_travel
     global wait_until_correct_angle
 
     start_time = time.time()
@@ -47,9 +61,17 @@ def control_loop():
     motor_right.start()
 
     while RUNNING:
-        current_time = time.time()        # === Sensor readings ===
+        current_time = time.time()        
+        
+        # === Sensor readings ===
         raw_imu_reading = imu.read_pitch_raw()  # For debugging
         estimated_tilt_angle = imu.read_pitch()
+        
+        # === Encoder readings (non-blocking) ===
+        left_position = encoder_left.get_steps()
+        right_position = encoder_right.get_steps()
+        left_travel = encoder_left.update_travel_distance()
+        right_travel = encoder_right.update_travel_distance()
 
         # === Safety check ===:
         abs_angle = abs(estimated_tilt_angle)
@@ -89,20 +111,29 @@ def control_loop():
         target_torque_left  = clip(target_torque - pid_manager.torque_differential, -1.0, 1.0)
         target_torque_right = clip(target_torque + pid_manager.torque_differential, -1.0, 1.0)
 
-        # === Motor Commands ===
-        motor_left.set_speed(target_torque_left)
+        # === Motor Commands ===        motor_left.set_speed(target_torque_left)
         motor_right.set_speed(target_torque_right)
 
         # === Update shared values for GUI ===
         latest_angle = estimated_tilt_angle
-        latest_torque = target_torque        # === Logging ===
+        latest_torque = target_torque
+        latest_left_position = left_position
+        latest_right_position = right_position
+        latest_left_travel = left_travel
+        latest_right_travel = right_travel
+
+        # === Logging ===
         if current_time - last_log_time >= LOG_INTERVAL:
             global_log_manager.log_debug(
                 f"raw_imu={raw_imu_reading:.2f}  "
                 f"corrected={estimated_tilt_angle:.2f}  "
                 f"offset={global_config.imu_mounting_offset:.2f}  "
                 f"set={pid_manager.pid_tilt_angle_to_torque.target_angle:.2f}  "
-                f"tgtT={target_torque:.2f}  ",
+                f"tgtT={target_torque:.2f}  "
+                f"encL={left_position:.0f}  "
+                f"encR={right_position:.0f}  "
+                f"travL={left_travel:.0f}  "
+                f"travR={right_travel:.0f}  ",
                 location="debug"
             )
             last_log_time = current_time

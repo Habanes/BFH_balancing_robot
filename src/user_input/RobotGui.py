@@ -9,12 +9,16 @@ class RobotGui:
 
         self.pid_manager = pid_manager
         self.get_state = get_state_callback
-
+        
         self.entries = {}
         self.angle_var = tk.StringVar()
         self.tgtangle_var = tk.StringVar()
         self.error_var = tk.StringVar()
         self.torque_var = tk.StringVar()
+        self.left_pos_var = tk.StringVar()
+        self.right_pos_var = tk.StringVar()
+        self.left_travel_var = tk.StringVar()
+        self.right_travel_var = tk.StringVar()
         self.offset_entry = None
 
         self.joystick_x = 0.0
@@ -44,6 +48,10 @@ class RobotGui:
             ("Target Angle", self.tgtangle_var),
             ("Angle Error",  self.error_var),
             ("Torque",       self.torque_var),
+            ("Left Position", self.left_pos_var),
+            ("Right Position", self.right_pos_var),
+            ("Left Travel", self.left_travel_var),
+            ("Right Travel", self.right_travel_var),
         ]
 
         for j, (label, var) in enumerate(labels, start=4):
@@ -51,17 +59,17 @@ class RobotGui:
             tk.Label(self.root, textvariable=var).grid(row=j, column=1)
 
     def build_offset_input(self):
-        tk.Label(self.root, text="Dynamic Offset").grid(row=7, column=0)
+        tk.Label(self.root, text="Dynamic Offset").grid(row=12, column=0)
         self.offset_entry = tk.Entry(self.root)
-        self.offset_entry.grid(row=7, column=1)
+        self.offset_entry.grid(row=12, column=1)
 
-        tk.Button(self.root, text="Set Dynamic Offset", command=self.set_dynamic_offset).grid(row=7, column=2)
+        tk.Button(self.root, text="Set Dynamic Offset", command=self.set_dynamic_offset).grid(row=12, column=2)
 
     def build_analog_joystick(self):
-        tk.Label(self.root, text="Analog Joystick").grid(row=11, column=0, columnspan=2)
+        tk.Label(self.root, text="Analog Joystick").grid(row=13, column=0, columnspan=2)
 
         self.joystick_canvas = tk.Canvas(self.root, width=150, height=150, bg="lightgray")
-        self.joystick_canvas.grid(row=12, column=0, columnspan=2, rowspan=3)
+        self.joystick_canvas.grid(row=14, column=0, columnspan=2, rowspan=3)
 
         self.joystick_radius = 60
         self.knob_radius = 10
@@ -127,12 +135,25 @@ class RobotGui:
     def update_pid_value(self, param):
         try:
             val = float(self.entries[param].get())
-            setattr(self.pid_manager.pid_tilt_angle_to_torque, param, val)
+            setattr(self.pid_manager.pid_tilt_angle_to_torque, param, val)        
         except ValueError:
             print(f"Invalid input for {param}")
 
     def refresh_values(self):
-        current_angle, torque = self.get_state()
+        state_data = self.get_state()
+        if len(state_data) == 6:  # New format with encoder data
+            current_angle, torque, left_pos, right_pos, left_travel, right_travel = state_data
+            self.left_pos_var.set(f"{left_pos:.0f}")
+            self.right_pos_var.set(f"{right_pos:.0f}")
+            self.left_travel_var.set(f"{left_travel:.0f}")
+            self.right_travel_var.set(f"{right_travel:.0f}")
+        else:  # Legacy format for compatibility
+            current_angle, torque = state_data
+            self.left_pos_var.set("N/A")
+            self.right_pos_var.set("N/A")
+            self.left_travel_var.set("N/A")
+            self.right_travel_var.set("N/A")
+        
         target_angle = self.pid_manager.pid_tilt_angle_to_torque.target_angle
         error = target_angle - current_angle
 
@@ -158,13 +179,12 @@ if __name__ == "__main__":
             self.pid_tilt_angle_to_torque = self.DummyPID()
 
         def setTargetAngle(self, val):
-            self.pid_tilt_angle_to_torque.target_angle = val
-
+            self.pid_tilt_angle_to_torque.target_angle = val        
         def set_dynamic_target_angle_offset(self, offset):
             print(f"Set offset: {offset}")
 
     def dummy_get_state():
-        return (0.0, 0.0)
+        return (0.0, 0.0, 0.0, 0.0, 0.0, 0.0)  # Include dummy encoder values
 
     root = tk.Tk()
     gui = RobotGui(root, DummyPIDManager(), dummy_get_state)

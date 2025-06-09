@@ -23,8 +23,28 @@ class MotorEncoder:
         )
 
         self.steps = 0.0
+        self.previous_steps = 0.0
+        self.steps_traveled = 0.0  # Cumulative distance traveled
 
     def get_steps(self) -> float:
+        """Get absolute position (can be positive or negative)"""
         # Return signed step count based on motor side
         self.steps = -self.encoder.steps if self.invert_direction else self.encoder.steps
         return self.steps
+    
+    def update_travel_distance(self) -> float:
+        """Update cumulative travel distance (always positive)"""
+        current_steps = self.get_steps()
+        step_delta = abs(current_steps - self.previous_steps)
+        self.steps_traveled += step_delta
+        self.previous_steps = current_steps
+        return self.steps_traveled
+    
+    def get_travel_distance(self) -> float:
+        """Get total distance traveled (always positive)"""
+        return self.steps_traveled
+    
+    def reset_travel_distance(self):
+        """Reset the cumulative travel distance counter"""
+        self.steps_traveled = 0.0
+        self.previous_steps = self.get_steps()

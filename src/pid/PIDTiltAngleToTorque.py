@@ -20,5 +20,6 @@ class PIDTiltAngleToTorque:
         self.pid.Ki = self.ki
         self.pid.Kd = self.kd
         self.pid.output_limits = self.output_limits
+        output = - self.pid(current_angle)
         
-        return self.pid(current_angle)
+        return output
