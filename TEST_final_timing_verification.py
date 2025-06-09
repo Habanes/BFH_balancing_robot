@@ -53,10 +53,9 @@ def test_ultra_conservative_timing():
     try:
         for i in range(target_iterations):
             iteration_start = time.time()
-            
-            # Measure IMU read time
+              # Measure IMU read time
             imu_start = time.time()
-            tilt_angle = imu.get_tilt_angle()
+            tilt_angle = imu.read_pitch()
             imu_end = time.time()
             imu_time = (imu_end - imu_start) * 1000  # Convert to ms
             
