@@ -7,21 +7,16 @@ from src.pid.pidManager import pidManager
 from src.log.logManager import global_log_manager
 from src.hardware.imu import IMU
 from src.hardware.motorController import MotorController
-from src.hardware.motorEncoder import MotorEncoder
 
 # === Shared Variables for GUI ===
 latest_angle = 0.0
 latest_torque = 0.0
 
 def get_latest_state():
-    return latest_angle, latest_torque
+    return latest_angle
 
 # === Initialization ===
 global_log_manager.log_info("Initializing components", location="main")
-
-# Use simulator if test mode is on
-
-
 
 imu = IMU()
 motor_left = MotorController(is_left=True)
@@ -35,14 +30,10 @@ wait_until_correct_angle = True
 LOG_INTERVAL = 0.25
 last_log_time = time.time()
 RUNNING = True
-last_tilt_to_torque_time = 0
 
 def control_loop():
-    global last_log_time, last_tilt_to_torque_time
-    global latest_angle, latest_torque
-    global wait_until_correct_angle
+    global last_log_time, latest_angle, latest_torque, wait_until_correct_angle
 
-    start_time = time.time()
     target_torque = 0.0  # ensure it's initialized
 
     motor_left.start()
@@ -52,7 +43,7 @@ def control_loop():
         current_time = time.time()
 
         # === Sensor readings ===
-        estimated_tilt_angle = -imu.read_pitch()
+        estimated_tilt_angle = imu.read_pitch()
 
         # === Safety check ===:
         abs_angle = abs(estimated_tilt_angle)
@@ -76,22 +67,20 @@ def control_loop():
                 )
             pid_manager.pid_tilt_angle_to_torque.target_angle = global_config.angle_neutral
 
-        else:
-            # Within safe range
+        else:            # Within safe range
             if wait_until_correct_angle:
                 motor_left.start()
                 motor_right.start()
                 wait_until_correct_angle = False
 
-            # Reset PID target angle to normal if it was set to 0 before
+            # Reset PID target angle to normal if it was set to neutral during soft limit
             if pid_manager.pid_tilt_angle_to_torque.target_angle == global_config.angle_neutral:
-                pid_manager.pid_tilt_angle_to_torque.target_angle = global_config.angle_neutral
-
-
+                pid_manager.update_pid_target()        
+        
         # === Control loops ===
         target_torque = pid_manager.pid_tilt_angle_to_torque.update(estimated_tilt_angle)
         
-        target_torque_left  = clip(target_torque - pid_manager.torque_differential, -1.0, 1.0)
+        target_torque_left = clip(target_torque - pid_manager.torque_differential, -1.0, 1.0)
         target_torque_right = clip(target_torque + pid_manager.torque_differential, -1.0, 1.0)
 
         # === Motor Commands ===
@@ -100,8 +89,8 @@ def control_loop():
 
         # === Update shared values for GUI ===
         latest_angle = estimated_tilt_angle
-        latest_torque = target_torque
-
+        latest_torque = target_torque        
+        
         # === Logging ===
         if current_time - last_log_time >= LOG_INTERVAL:
             global_log_manager.log_debug(
@@ -112,7 +101,6 @@ def control_loop():
             )
             last_log_time = current_time
 
-        global_log_manager.log_debug(time.time)
         time.sleep(global_config.main_loop_interval)
 
     motor_left.stop()
@@ -137,7 +125,7 @@ if __name__ == "__main__":
 
         from src.user_input.RobotGui import RobotGui
         root = tk.Tk()
-        gui = RobotGui(root, pid_manager, get_latest_state)
+        RobotGui(root, pid_manager, get_latest_state)
         root.mainloop()
 
     except KeyboardInterrupt:
