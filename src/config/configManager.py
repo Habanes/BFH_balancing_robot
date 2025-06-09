@@ -6,7 +6,7 @@ class ConfigManager:
         
         # === IMU Calibration (CONSOLIDATED) ===
         # Angle IMU reads when robot is perfectly upright - used to correct mounting offset
-        self.imu_mounting_offset = 6.7
+        self.imu_mounting_offset = -6.7
         
         self.torque_differential = 0.1
 
