@@ -40,10 +40,9 @@ def control_loop():
     motor_right.start()
 
     while RUNNING:
-        current_time = time.time()
-
-        # === Sensor readings ===
-        estimated_tilt_angle = imu.read_pitch() + global_config.imu_angle_offset
+        current_time = time.time()        # === Sensor readings ===
+        # IMU read_pitch() already applies the mounting offset correction
+        estimated_tilt_angle = imu.read_pitch()
 
         # === Safety check ===:
         abs_angle = abs(estimated_tilt_angle)
