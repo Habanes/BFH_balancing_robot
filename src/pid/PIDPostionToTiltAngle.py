@@ -8,7 +8,7 @@ class PIDPositionToTiltAngle:
         self.pid.output_limits = output_limits
         
         # Direct access attributes
-        self.target_psotion = setpoint
+        self.target_position = setpoint
         self.kp = kp
         self.ki = ki
         self.kd = kd
@@ -16,7 +16,7 @@ class PIDPositionToTiltAngle:
 
     def update(self, current_position: float) -> float:
         # Sync attributes with PID object
-        self.pid.setpoint = self.target_psotion
+        self.pid.setpoint = self.target_position
         self.pid.Kp = self.kp
         self.pid.Ki = self.ki
         self.pid.Kd = self.kd

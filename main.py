@@ -21,8 +21,6 @@ global_log_manager.log_info("Initializing components", location="main")
 
 # Use simulator if test mode is on
 
-
-
 imu = IMU()
 motor_left = MotorController(is_left=True)
 motor_right = MotorController(is_left=False)
