@@ -43,7 +43,7 @@ def control_loop():
         current_time = time.time()
 
         # === Sensor readings ===
-        estimated_tilt_angle = imu.read_pitch()
+        estimated_tilt_angle = imu.read_pitch() + global_config.imu_angle_offset
 
         # === Safety check ===:
         abs_angle = abs(estimated_tilt_angle)
