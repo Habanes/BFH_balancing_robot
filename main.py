@@ -78,11 +78,9 @@ def control_loop():
             if wait_until_correct_angle:
                 motor_left.start()
                 motor_right.start()
-                wait_until_correct_angle = False
-
-            # Reset PID target angle to normal if it was set to 0 before
+                wait_until_correct_angle = False            # Reset PID target angle to normal if it was set to neutral before
             if pid_manager.pid_tilt_angle_to_torque.target_angle == global_config.angle_neutral:
-                pid_manager.pid_tilt_angle_to_torque.target_angle = global_config.angle_neutral
+                pid_manager.update_pid_target()  # Restore proper target angle
 
 
         # === Control loops ===
