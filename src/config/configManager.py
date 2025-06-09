@@ -19,20 +19,17 @@ class ConfigManager:
         self.velocity_to_tilt_angle_interval = 1 / self.velocity_to_tilt_angle_rate
         self.tilt_angle_to_torque_interval = 1 / self.tilt_angle_to_torque_rate
         self.angular_velocity_to_torque_diff_interval = 1 / self.angular_velocity_to_torque_diff_rate        # === Main loop tick rate (can be used as base loop) ===
-        # PERFORMANCE NOTE: Final timing verification results (50Hz test):
-        # - IMU reads: 0.732ms average (excellent)
-        # - Average loop: 20.81ms (96.1% accuracy)
-        # - Max spike: 25.24ms (26.2% deviation)
-        # 
-        # Final approach: 40Hz main loop (25ms interval)
-        # This provides 34x safety margin and accommodates 26% spikes
-        self.main_loop_rate = 40  # Final conservative rate based on verification test
+        # TESTING WITHOUT ENCODERS: Trying to restore fast control frequency
+        # Previous analysis showed IMU reads at 0.73ms average
+        # Target: 200Hz (5ms interval) for stable balancing
+        # This gives 7x safety margin over IMU read time
+        self.main_loop_rate = 200  # Test frequency without encoder interference
         self.main_loop_interval = 1 / self.main_loop_rate        # === Motion and angle settings ===
         self.base_velocity = 0.1
         self.angle_neutral = 0.0
         self.angle_rotation_speed = 90.0  # degrees per second
-        # Updated for 40Hz main loop rate
-        self.angle_rotation = self.angle_rotation_speed / self.main_loop_rate  # Now 2.25 degrees per loop
+        # Updated for 200Hz main loop rate
+        self.angle_rotation = self.angle_rotation_speed / self.main_loop_rate  # Now 0.45 degrees per loop
         self.angle_limit = 60.0
         self.tilt_angle_soft_limit = 30.0
 

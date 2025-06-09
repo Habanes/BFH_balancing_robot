@@ -30,13 +30,14 @@ imu = IMU()
 motor_left = MotorController(is_left=True)
 motor_right = MotorController(is_left=False)
 
+# === TEMPORARILY DISABLED FOR TIMING TEST ===
 # Initialize encoders for position tracking
-encoder_left = MotorEncoder(is_left=True)
-encoder_right = MotorEncoder(is_left=False)
+# encoder_left = MotorEncoder(is_left=True)
+# encoder_right = MotorEncoder(is_left=False)
 
 # Reset travel distance counters
-encoder_left.reset_travel_distance()
-encoder_right.reset_travel_distance()
+# encoder_left.reset_travel_distance()
+# encoder_right.reset_travel_distance()
 
 pid_manager = pidManager()
 
@@ -72,21 +73,20 @@ def control_loop():
         
         # === Sensor readings ===
         raw_imu_reading = imu.read_pitch_raw()  # For debugging
-        estimated_tilt_angle = imu.read_pitch()
-          # === Encoder readings (optimized timing) ===
-        # Only read encoders at 50Hz instead of 100Hz to improve timing
+        estimated_tilt_angle = imu.read_pitch()        # === Encoder readings (TEMPORARILY DISABLED) ===
+        # Only read encoders at 20Hz instead of 40Hz to improve timing
         # This is sufficient for position tracking while maintaining stability
         if current_time - last_encoder_read_time >= encoder_read_interval:
-            left_position = encoder_left.get_steps()
-            right_position = encoder_right.get_steps()
-            left_travel = encoder_left.update_travel_distance()
-            right_travel = encoder_right.update_travel_distance()
+            # left_position = encoder_left.get_steps()
+            # right_position = encoder_right.get_steps()
+            # left_travel = encoder_left.update_travel_distance()
+            # right_travel = encoder_right.update_travel_distance()
             
-            # Update shared values for GUI
-            latest_left_position = left_position
-            latest_right_position = right_position
-            latest_left_travel = left_travel
-            latest_right_travel = right_travel
+            # Update shared values for GUI (set to dummy values)
+            latest_left_position = 0
+            latest_right_position = 0
+            latest_left_travel = 0
+            latest_right_travel = 0
             
             last_encoder_read_time = current_time
 
