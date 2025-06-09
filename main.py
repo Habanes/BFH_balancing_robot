@@ -49,9 +49,9 @@ RUNNING = True
 last_tilt_to_torque_time = 0
 
 # === Timing optimization for encoder reads ===
-# With 50Hz main loop, read encoders at 25Hz (every 2nd iteration)
+# With 40Hz main loop, read encoders at 20Hz (every 2nd iteration)
 # This minimizes I2C traffic while maintaining adequate position tracking
-ENCODER_READ_RATE = 25  # Hz - Conservative approach based on timing analysis
+ENCODER_READ_RATE = 20  # Hz - Final conservative approach
 encoder_read_interval = 1.0 / ENCODER_READ_RATE
 last_encoder_read_time = 0
 
@@ -126,7 +126,7 @@ def control_loop():
 
         # === Control loops ===
         target_torque = pid_manager.pid_tilt_angle_to_torque.update(estimated_tilt_angle)
-          target_torque_left  = clip(target_torque - pid_manager.torque_differential, -1.0, 1.0)
+        target_torque_left  = clip(target_torque - pid_manager.torque_differential, -1.0, 1.0)
         target_torque_right = clip(target_torque + pid_manager.torque_differential, -1.0, 1.0)
         
         # === Motor Commands ===
